@@ -538,6 +538,9 @@ def playwright_cookies_to_requests(cookies):
                     import datetime
                     expires_dt = datetime.datetime.fromtimestamp(expires)
                     jar.set(name, value, domain=domain, path=path, expires=expires_dt)
+                elif isinstance(expires, datetime.datetime):
+                    # Already a datetime object, use as-is
+                    jar.set(name, value, domain=domain, path=path, expires=expires)
             except Exception as e:
                 logger.debug(f"Could not set expires for cookie {name}: {e}")
     
@@ -725,33 +728,80 @@ def verify_authentication(session, test_url="https://www.upwork.com/nx/search/jo
         resp = session.get(test_url, timeout=30)
         html = resp.text.lower()
         
-        # Check for authentication indicators
-        auth_indicators = [
+        # Log response details for debugging
+        logger.debug(f"🔍 Response status: {resp.status_code}")
+        logger.debug(f"🔍 Response length: {len(html)} characters")
+        logger.debug(f"🔍 Response preview: {html[:200]}...")
+        
+        # Check for authentication failure indicators (more comprehensive)
+        auth_failure_indicators = [
             "log in",
             "sign in", 
             "login",
             "authentication required",
-            "please log in"
+            "please log in",
+            "login to continue",
+            "access denied",
+            "unauthorized",
+            "session expired",
+            "please sign in",
+            "login form",
+            "email and password"
         ]
         
-        for indicator in auth_indicators:
+        auth_failures = []
+        for indicator in auth_failure_indicators:
             if indicator in html:
-                logger.warning(f"⚠️ Authentication verification failed: found '{indicator}' in response")
-                return False
+                auth_failures.append(indicator)
         
-        # Check for successful indicators
+        if auth_failures:
+            logger.warning(f"⚠️ Authentication verification failed: found indicators: {auth_failures}")
+            return False
+        
+        # Check for successful indicators (more comprehensive)
         success_indicators = [
             "job-tile-title-link",
             "search results",
-            "freelance jobs"
+            "freelance jobs",
+            "upwork",
+            "find work",
+            "talent",
+            "jobs",
+            "client",
+            "contractor",
+            "project",
+            "hourly",
+            "fixed price",
+            "proposal",
+            "skill",
+            "category"
         ]
         
+        success_found = []
         for indicator in success_indicators:
             if indicator in html:
-                logger.debug("✅ Authentication verification successful")
-                return True
+                success_found.append(indicator)
+        
+        if success_found:
+            logger.debug(f"✅ Authentication verification successful: found indicators: {success_found}")
+            return True
+        
+        # If no clear indicators, check response status and content length
+        if resp.status_code == 200 and len(html) > 1000:
+            logger.debug("✅ Authentication verification successful: 200 status with substantial content")
+            return True
+        elif resp.status_code == 403:
+            logger.warning("⚠️ Authentication verification failed: 403 Forbidden")
+            return False
+        elif resp.status_code == 401:
+            logger.warning("⚠️ Authentication verification failed: 401 Unauthorized")
+            return False
+        elif len(html) < 500:
+            logger.warning("⚠️ Authentication verification failed: response too short (likely error page)")
+            return False
         
         logger.warning("⚠️ Authentication verification inconclusive - no clear indicators found")
+        logger.debug(f"🔍 Final response preview: {html[:500]}...")
         return False
         
     except Exception as e:
@@ -806,6 +856,11 @@ def get_job_urls_requests(session, search_querys, search_urls, limit=50):
                         logger.warning(f"HTML snippet: {html[html.lower().find('log in'):html.lower().find('log in')+200] if 'log in' in html.lower() else 'No log in text found'}")
                     else:
                         logger.debug("✅ No authentication issues detected in response")
+                    
+                    # Log response details for debugging
+                    logger.debug(f"🔍 Job search response status: {resp.status_code}")
+                    logger.debug(f"🔍 Job search response length: {len(html)} characters")
+                    logger.debug(f"🔍 Job search response preview: {html[:300]}...")
                 
                 soup = BeautifulSoup(html, 'html.parser')
                 articles = soup.find_all('article')
@@ -989,14 +1044,9 @@ async def main(jsonInput: dict) -> list[dict]:
             
             if auth_attempt < max_auth_retries:
                 logger.info("🔄 Retrying authentication...")
-                # Clear cookies and re-authenticate
-                try:
-                    await context.clear_cookies()
-                    page = await context.new_page()
-                    page, context = await login_and_solve(page, context, username, password, search_url, login_url, credentials_provided)
-                    session = await get_requests_session_from_playwright(context, page, proxy_details=proxy_details)
-                except Exception as e:
-                    logger.error(f"⚠️ Failed to re-authenticate: {e}")
+                # Don't retry authentication since browser context is closed
+                # Just continue with the current session and let the job fetching determine if it works
+                logger.warning("⚠️ Skipping retry authentication - browser context closed, proceeding with current session")
             else:
                 logger.error("❌ All authentication attempts failed")
     
