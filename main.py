@@ -430,7 +430,8 @@ async def login_and_solve(
     password: str,
     search_url: str,
     login_url: str,
-    credentials_provided: bool
+    credentials_provided: bool,
+    wait_checkbox_delay: int = 5
 ) -> tuple[Page, BrowserContext]:
     """
     Navigate to Upwork, solve captcha if present, and log in if credentials are provided.
@@ -457,7 +458,7 @@ async def login_and_solve(
     await safe_goto(page, search_url, context)
     # bypass captcha
     logger.debug(f"Checking for captcha challenge...")
-    captcha_solved = await solve_captcha(queryable=page, browser_context=context, captcha_type='cloudflare', challenge_type='interstitial', solve_attempts = 5, solve_click_delay = 6, wait_checkbox_attempts = 5, wait_checkbox_delay = 5, checkbox_click_attempts = 3, attempt_delay = 5)
+    captcha_solved = await solve_captcha(queryable=page, browser_context=context, captcha_type='cloudflare', challenge_type='interstitial', solve_attempts = 5, solve_click_delay = 6, wait_checkbox_attempts = 5, wait_checkbox_delay = wait_checkbox_delay, checkbox_click_attempts = 3, attempt_delay = 5)
     if captcha_solved:
         logger.debug(f"Successfully solved captcha challenge!")
     else:
@@ -1006,6 +1007,9 @@ async def main(jsonInput: dict) -> list[dict]:
     # proxy
     proxy_details = jsonInput.get('proxy_details', None)
     
+    if proxy_details:
+        wait_checkbox_delay = 10
+    
     logger.debug(f"proxy_details: {proxy_details}")
     
     
@@ -1020,7 +1024,7 @@ async def main(jsonInput: dict) -> list[dict]:
             sys.exit(1)
         try:
             logger.info("🔒 Solving Captcha and Logging in...")
-            page, context = await login_and_solve(page, context, username, password, search_url, login_url, credentials_provided)
+            page, context = await login_and_solve(page, context, username, password, search_url, login_url, credentials_provided, wait_checkbox_delay)
         except Exception as e:
             logger.error(f"⚠️ Error logging in: {e}")
             sys.exit(1)
