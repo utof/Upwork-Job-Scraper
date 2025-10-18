@@ -498,7 +498,7 @@ async def login_and_solve(
 
 def playwright_cookies_to_requests(cookies):
     """
-    Convert Playwright cookies to a RequestsCookieJar.
+    Convert Playwright cookies to a RequestsCookieJar with all attributes preserved.
 
     :param cookies: List of cookies from Playwright context
     :type cookies: list[dict]
@@ -507,7 +507,41 @@ def playwright_cookies_to_requests(cookies):
     """
     jar = requests.cookies.RequestsCookieJar()
     for cookie in cookies:
-        jar.set(cookie['name'], cookie['value'], domain=cookie['domain'], path=cookie['path'])
+        # Extract all cookie attributes
+        name = cookie.get('name', '')
+        value = cookie.get('value', '')
+        domain = cookie.get('domain', '')
+        path = cookie.get('path', '/')
+        secure = cookie.get('secure', False)
+        http_only = cookie.get('httpOnly', False)
+        same_site = cookie.get('sameSite', 'Lax')
+        expires = cookie.get('expires', None)
+        
+        # Log cookie details for debugging
+        logger.debug(f"Transferring cookie: {name}={value[:20]}... (domain={domain}, path={path}, secure={secure})")
+        
+        # Set cookie with all available attributes
+        jar.set(
+            name, 
+            value, 
+            domain=domain, 
+            path=path,
+            secure=secure,
+            rest={'HttpOnly': http_only, 'SameSite': same_site}
+        )
+        
+        # Handle expires if present
+        if expires:
+            try:
+                # Convert expires timestamp to datetime if it's a number
+                if isinstance(expires, (int, float)):
+                    import datetime
+                    expires_dt = datetime.datetime.fromtimestamp(expires)
+                    jar.set(name, value, domain=domain, path=path, expires=expires_dt)
+            except Exception as e:
+                logger.debug(f"Could not set expires for cookie {name}: {e}")
+    
+    logger.debug(f"Transferred {len(cookies)} cookies to requests session")
     return jar
 
 def _build_proxy_url_from_details(proxy_details: dict | None) -> str | None:
@@ -522,27 +556,51 @@ def _build_proxy_url_from_details(proxy_details: dict | None) -> str | None:
     Returns a URL string like: http://user:pass@host:port or None if unavailable.
     """
     if not proxy_details:
+        logger.debug("🔗 No proxy details provided")
         return None
+    
     server = proxy_details.get('server')
     if not server:
+        logger.debug("🔗 No server in proxy details")
         return None
+    
+    logger.debug(f"🔗 Building proxy URL from server: {server}")
+    
     # Ensure scheme present for parsing
     if not server.startswith(('http://', 'https://')):
         server = f"http://{server}"
+        logger.debug(f"🔗 Added http scheme: {server}")
+    
     parsed = urlparse(server)
+    
     # If credentials already embedded, keep as-is
     if parsed.username or '@' in server:
+        logger.debug("🔗 Proxy already has embedded credentials")
         return urlunparse(parsed)
+    
     username = proxy_details.get('username')
     password = proxy_details.get('password')
+    
     if not (username and password):
+        logger.debug("🔗 No username/password in proxy details, using server as-is")
         return urlunparse(parsed)
+    
     # Inject credentials
     netloc = parsed.netloc
     # If netloc contains host:port, prepend credentials
     netloc_with_auth = f"{username}:{password}@{netloc}"
     parsed_with_auth = parsed._replace(netloc=netloc_with_auth)
-    return urlunparse(parsed_with_auth)
+    final_url = urlunparse(parsed_with_auth)
+    
+    # Mask credentials in log for security
+    masked_url = final_url
+    if '@' in final_url:
+        parts = final_url.split('@')
+        if len(parts) == 2:
+            masked_url = f"***@{parts[1]}"
+    
+    logger.debug(f"🔗 Built proxy URL: {masked_url}")
+    return final_url
 
 
 async def get_requests_session_from_playwright(context, page, max_retries=3, retry_delay=1, proxy_details: dict | None = None):
@@ -558,14 +616,27 @@ async def get_requests_session_from_playwright(context, page, max_retries=3, ret
     :type max_retries: int
     :param retry_delay: Delay in seconds between retries (default: 1)
     :type retry_delay: int
+    :param proxy_details: Proxy configuration details
+    :type proxy_details: dict | None
     :return: requests.Session object with cookies and user-agent set
     :rtype: requests.Session
     """
+    logger.debug("🔧 Creating requests session from Playwright context...")
+    
+    # Get cookies from context
     cookies = await context.cookies()
+    logger.debug(f"📋 Retrieved {len(cookies)} cookies from Playwright context")
+    
+    # Log cookie details for debugging
+    for cookie in cookies:
+        logger.debug(f"🍪 Cookie: {cookie.get('name', 'unnamed')} (domain: {cookie.get('domain', 'none')}, path: {cookie.get('path', 'none')}, secure: {cookie.get('secure', False)})")
+    
+    # Get user agent
     user_agent = None
     for attempt in range(1, max_retries + 1):
         try:
             user_agent = await page.evaluate("() => navigator.userAgent")
+            logger.debug(f"🌐 Retrieved user-agent: {user_agent[:50]}...")
             break
         except Exception as e:
             if "Execution context was destroyed" in str(e):
@@ -580,19 +651,112 @@ async def get_requests_session_from_playwright(context, page, max_retries=3, ret
                 break
     if not user_agent:
         user_agent = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/138.0.0.0 Safari/537.36"
+    
+    # Create requests session
     session = requests.Session()
+    
+    # Transfer cookies
     session.cookies = playwright_cookies_to_requests(cookies)
-    session.headers.update({'User-Agent': user_agent})
+    logger.debug(f"🍪 Transferred {len(session.cookies)} cookies to requests session")
+    
+    # Set user agent and additional headers for consistency
+    session.headers.update({
+        'User-Agent': user_agent,
+        'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8',
+        'Accept-Language': 'en-US,en;q=0.5',
+        'Accept-Encoding': 'gzip, deflate, br',
+        'DNT': '1',
+        'Connection': 'keep-alive',
+        'Upgrade-Insecure-Requests': '1',
+    })
+    logger.debug(f"🌐 Set user-agent and headers: {user_agent[:50]}...")
+    
     # Apply proxy to requests session if provided
     proxy_url = _build_proxy_url_from_details(proxy_details)
     if proxy_url:
+        # Mask credentials in log for security
+        masked_proxy = proxy_url
+        if '@' in proxy_url:
+            parts = proxy_url.split('@')
+            if len(parts) == 2:
+                masked_proxy = f"***@{parts[1]}"
+        
         session.proxies.update({
             'http': proxy_url,
             'https': proxy_url,
         })
-        logger.debug(f"session.proxies updated to: {proxy_url}")
+        logger.debug(f"🔗 Applied proxy to requests session: {masked_proxy}")
+        
+        # Add proxy authentication headers if needed
+        if '@' in proxy_url:
+            try:
+                from urllib.parse import urlparse
+                parsed = urlparse(proxy_url)
+                if parsed.username and parsed.password:
+                    import base64
+                    credentials = f"{parsed.username}:{parsed.password}"
+                    encoded_credentials = base64.b64encode(credentials.encode()).decode()
+                    session.headers['Proxy-Authorization'] = f'Basic {encoded_credentials}'
+                    logger.debug("🔗 Added proxy authentication header")
+            except Exception as e:
+                logger.debug(f"🔗 Could not add proxy auth header: {e}")
+    else:
+        logger.debug("🔗 No proxy configured for requests session")
+    
+    # Log final session configuration
+    logger.debug(f"✅ Requests session created with {len(session.cookies)} cookies and proxy: {'Yes' if proxy_url else 'No'}")
+    
     return session
 
+
+def verify_authentication(session, test_url="https://www.upwork.com/nx/search/jobs/"):
+    """
+    Verify that the session is properly authenticated by making a test request.
+    
+    :param session: requests.Session object to test
+    :type session: requests.Session
+    :param test_url: URL to test authentication against
+    :type test_url: str
+    :return: True if authenticated, False otherwise
+    :rtype: bool
+    """
+    try:
+        logger.debug("🔍 Verifying authentication...")
+        resp = session.get(test_url, timeout=30)
+        html = resp.text.lower()
+        
+        # Check for authentication indicators
+        auth_indicators = [
+            "log in",
+            "sign in", 
+            "login",
+            "authentication required",
+            "please log in"
+        ]
+        
+        for indicator in auth_indicators:
+            if indicator in html:
+                logger.warning(f"⚠️ Authentication verification failed: found '{indicator}' in response")
+                return False
+        
+        # Check for successful indicators
+        success_indicators = [
+            "job-tile-title-link",
+            "search results",
+            "freelance jobs"
+        ]
+        
+        for indicator in success_indicators:
+            if indicator in html:
+                logger.debug("✅ Authentication verification successful")
+                return True
+        
+        logger.warning("⚠️ Authentication verification inconclusive - no clear indicators found")
+        return False
+        
+    except Exception as e:
+        logger.error(f"⚠️ Authentication verification failed with error: {e}")
+        return False
 
 def get_job_urls_requests(session, search_querys, search_urls, limit=50):
     """
@@ -609,6 +773,11 @@ def get_job_urls_requests(session, search_querys, search_urls, limit=50):
     :return: Dictionary mapping each query to a list of job URLs
     :rtype: dict[str, list[str]]
     """
+    # Verify authentication before proceeding
+    if not verify_authentication(session):
+        logger.error("❌ Authentication verification failed. Session may not be properly authenticated.")
+        # Don't raise exception, but log the issue and continue
+    
     search_results = {}
     for query, base_url in zip(search_querys, search_urls):
         all_hrefs = []
@@ -622,11 +791,21 @@ def get_job_urls_requests(session, search_querys, search_urls, limit=50):
                 resp.raise_for_status()
                 html = resp.text
                 
-                # Check for "log in" string in the first iteration of the first query to detect login issues
+                # Enhanced authentication check
                 if page_num == 1 and query == search_querys[0]:
+                    auth_issues = []
                     if "log in" in html.lower():
-                        logger.warning("⚠️ 'log in' string detected in HTML response. This indicates the session may not be properly authenticated.")
-                        logger.warning(f"HTML snippet containing 'log in': {html[html.lower().find('log in'):html.lower().find('log in')+200]}")
+                        auth_issues.append("'log in' text found")
+                    if "sign in" in html.lower():
+                        auth_issues.append("'sign in' text found")
+                    if "authentication required" in html.lower():
+                        auth_issues.append("'authentication required' text found")
+                    
+                    if auth_issues:
+                        logger.warning(f"⚠️ Authentication issues detected: {', '.join(auth_issues)}")
+                        logger.warning(f"HTML snippet: {html[html.lower().find('log in'):html.lower().find('log in')+200] if 'log in' in html.lower() else 'No log in text found'}")
+                    else:
+                        logger.debug("✅ No authentication issues detected in response")
                 
                 soup = BeautifulSoup(html, 'html.parser')
                 articles = soup.find_all('article')
@@ -792,6 +971,38 @@ async def main(jsonInput: dict) -> list[dict]:
             sys.exit(1)
         # Extract cookies and user-agent, build requests session
         session = await get_requests_session_from_playwright(context, page, proxy_details=proxy_details)
+    
+    # Verify authentication and retry if needed
+    auth_verified = False
+    max_auth_retries = 2
+    
+    for auth_attempt in range(1, max_auth_retries + 1):
+        logger.info(f"🔐 Authentication attempt {auth_attempt}/{max_auth_retries}")
+        
+        # Test authentication
+        if verify_authentication(session):
+            auth_verified = True
+            logger.info("✅ Authentication verified successfully")
+            break
+        else:
+            logger.warning(f"⚠️ Authentication verification failed on attempt {auth_attempt}")
+            
+            if auth_attempt < max_auth_retries:
+                logger.info("🔄 Retrying authentication...")
+                # Clear cookies and re-authenticate
+                try:
+                    await context.clear_cookies()
+                    page = await context.new_page()
+                    page, context = await login_and_solve(page, context, username, password, search_url, login_url, credentials_provided)
+                    session = await get_requests_session_from_playwright(context, page, proxy_details=proxy_details)
+                except Exception as e:
+                    logger.error(f"⚠️ Failed to re-authenticate: {e}")
+            else:
+                logger.error("❌ All authentication attempts failed")
+    
+    if not auth_verified:
+        logger.warning("⚠️ Proceeding with unverified authentication - results may be limited")
+    
     # Use requests for all scraping
     try:
         logger.info("💼 Getting Related Jobs...")
