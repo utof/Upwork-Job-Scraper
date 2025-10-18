@@ -590,6 +590,7 @@ async def get_requests_session_from_playwright(context, page, max_retries=3, ret
             'http': proxy_url,
             'https': proxy_url,
         })
+        logger.debug(f"session.proxies updated to: {proxy_url}")
     return session
 
 
