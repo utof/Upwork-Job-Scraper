@@ -1,0 +1,16 @@
+[project]
+name = "upwork-job-scraper"
+version = "0.1.0"
+description = "Add your description here"
+readme = "README.md"
+requires-python = ">=3.10"
+dependencies = [
+    "apify==3.0.1",
+    "beautifulsoup4==4.13.4",
+    "camoufox[geoip]==0.4.11",
+    "coloredlogs==15.0.1",
+    "js2py==0.74",
+    "pandas==2.3.0",
+    "playwright==1.52.0",
+    "toml==0.10.2",
+]
