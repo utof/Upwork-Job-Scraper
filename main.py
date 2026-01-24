@@ -882,9 +882,12 @@ async def main(jsonInput: dict) -> list[dict]:
 
     logger.debug(f'proxy_details: {proxy_details}')
 
+    # Detect if running on Apify (no display available)
+    is_apify = bool(os.environ.get('ACTOR_INPUT_KEY'))
+
     # Only one browser for login/captcha
     async with AsyncCamoufox(
-        headless=False,
+        headless=is_apify,  # headless on Apify, headed locally
         geoip=True,
         humanize=True,
         i_know_what_im_doing=True,
