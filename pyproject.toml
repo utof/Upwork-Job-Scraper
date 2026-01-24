@@ -14,3 +14,7 @@ dependencies = [
     "playwright==1.52.0",
     "toml==0.10.2",
 ]
+
+[tool.ruff.format]
+# Prefer single quotes over double quotes.
+quote-style = "single"

@@ -30,100 +30,103 @@ from utils.logger import Logger
 
 UPWORK_MAIN_CATEGORIES = {
     # Main Categories
-    "accounting & consulting": "531770282584862721",
-    "admin support": "531770282580668416",
-    "customer service": "531770282580668417",
-    "data science & analytics": "531770282580668420",
-    "design & creative": "531770282580668421",
-    "engineering & architecture": "531770282584862722",
-    "it & networking": "531770282580668419",
-    "legal": "531770282584862723",
-    "sales & marketing": "531770282580668422",
-    "translation": "531770282584862720",
-    "web, mobile & software dev": "531770282580668418",
-    "writing": "531770282580668423",
+    'accounting & consulting': '531770282584862721',
+    'admin support': '531770282580668416',
+    'customer service': '531770282580668417',
+    'data science & analytics': '531770282580668420',
+    'design & creative': '531770282580668421',
+    'engineering & architecture': '531770282584862722',
+    'it & networking': '531770282580668419',
+    'legal': '531770282584862723',
+    'sales & marketing': '531770282580668422',
+    'translation': '531770282584862720',
+    'web, mobile & software dev': '531770282580668418',
+    'writing': '531770282580668423',
 }
 # Subcategories
 UPWORK_SUBCATEGORIES = {
     # accounting & consulting
-    "personal & professional coaching": "1534904461833879552",
-    "accounting & bookkeeping": "531770282601639943",
-    "financial planning": "531770282601639945",
-    "recruiting & human resources": "531770282601639946",
-    "management consulting & analysis": "531770282601639944",
-    "other - accounting & consulting": "531770282601639947",
+    'personal & professional coaching': '1534904461833879552',
+    'accounting & bookkeeping': '531770282601639943',
+    'financial planning': '531770282601639945',
+    'recruiting & human resources': '531770282601639946',
+    'management consulting & analysis': '531770282601639944',
+    'other - accounting & consulting': '531770282601639947',
     # admin support
-    "data entry & transcription services": "531770282584862724",
-    "virtual assistance": "531770282584862725",
-    "project management": "531770282584862728",
-    "market research & product reviews": "531770282584862726",
+    'data entry & transcription services': '531770282584862724',
+    'virtual assistance': '531770282584862725',
+    'project management': '531770282584862728',
+    'market research & product reviews': '531770282584862726',
     # customer service
-    "community management & tagging": "1484275072572772352",
-    "customer service & tech support": "531770282584862730",
+    'community management & tagging': '1484275072572772352',
+    'customer service & tech support': '531770282584862730',
     # data science & analytics
-    "data analysis & testing": "531770282593251330",
-    "data extraction & etl": "531770282593251331",
-    "data mining & management": "531770282589057038",
-    "ai & machine learning": "531770282593251329",
+    'data analysis & testing': '531770282593251330',
+    'data extraction & etl': '531770282593251331',
+    'data mining & management': '531770282589057038',
+    'ai & machine learning': '531770282593251329',
     # design & creative
-    "art & illustration": "531770282593251335",
-    "audio & music production": "531770282593251341",
-    "branding & logo design": "1044578476142100480",
-    "nft, ar/vr & game art": "1356688560628174848",
-    "graphic, editorial & presentation design": "531770282593251334",
-    "performing arts": "1356688565288046592",
-    "photography": "531770282593251340",
-    "product design": "531770282601639953",
-    "video & animation": "1356688570056970240",
+    'art & illustration': '531770282593251335',
+    'audio & music production': '531770282593251341',
+    'branding & logo design': '1044578476142100480',
+    'nft, ar/vr & game art': '1356688560628174848',
+    'graphic, editorial & presentation design': '531770282593251334',
+    'performing arts': '1356688565288046592',
+    'photography': '531770282593251340',
+    'product design': '531770282601639953',
+    'video & animation': '1356688570056970240',
     # engineering & architecture
-    "building & landscape architecture": "531770282601639949",
-    "chemical engineering": "531770282605834240",
-    "civil & structural engineering": "531770282601639950",
-    "contract manufacturing": "531770282605834241",
-    "electrical & electronic engineering": "531770282601639951",
-    "interior & trade show design": "531770282605834242",
-    "energy & mechanical engineering": "531770282601639952",
-    "physical sciences": "1301900647896092672",
-    "3d modeling & cad": "531770282601639948",
+    'building & landscape architecture': '531770282601639949',
+    'chemical engineering': '531770282605834240',
+    'civil & structural engineering': '531770282601639950',
+    'contract manufacturing': '531770282605834241',
+    'electrical & electronic engineering': '531770282601639951',
+    'interior & trade show design': '531770282605834242',
+    'energy & mechanical engineering': '531770282601639952',
+    'physical sciences': '1301900647896092672',
+    '3d modeling & cad': '531770282601639948',
     # it & networking
-    "database management & administration": "531770282589057033",
-    "erp & crm software": "531770282589057034",
-    "information security & compliance": "531770282589057036",
-    "network & system administration": "531770282589057035",
-    "devops & solution architecture": "531770282589057037",
+    'database management & administration': '531770282589057033',
+    'erp & crm software': '531770282589057034',
+    'information security & compliance': '531770282589057036',
+    'network & system administration': '531770282589057035',
+    'devops & solution architecture': '531770282589057037',
     # legal
-    "corporate & contract law": "531770282605834246",
-    "international & immigration law": "1484275156546932736",
-    "finance & tax law": "531770283696353280",
-    "public law": "1484275408410693632",
+    'corporate & contract law': '531770282605834246',
+    'international & immigration law': '1484275156546932736',
+    'finance & tax law': '531770283696353280',
+    'public law': '1484275408410693632',
     # sales & marketing
-    "digital marketing": "531770282597445636",
-    "lead generation & telemarketing": "531770282597445634",
-    "marketing, pr & brand strategy": "531770282593251343",
+    'digital marketing': '531770282597445636',
+    'lead generation & telemarketing': '531770282597445634',
+    'marketing, pr & brand strategy': '531770282593251343',
     # translation
-    "language tutoring & interpretation": "1534904461842268160",
-    "translation & localization services": "531770282601639939",
+    'language tutoring & interpretation': '1534904461842268160',
+    'translation & localization services': '531770282601639939',
     # web, mobile & software dev
-    "blockchain, nft & cryptocurrency": "1517518458442309632",
-    "ai apps and integration": "1737190722360750082",
-    "desktop application development": "531770282589057025",
-    "ecommerce development": "531770282589057026",
-    "game design & development": "531770282589057027",
-    "mobile development": "531770282589057024",
-    "other - software development": "531770282589057032",
-    "product management": "531770282589057030",
-    "qa & testing": "531770282589057031",
-    "scripts & utilities": "531770282589057028",
-    "web & mobile design": "531770282589057029",
-    "web development": "531770282584862733",
+    'blockchain, nft & cryptocurrency': '1517518458442309632',
+    'ai apps and integration': '1737190722360750082',
+    'desktop application development': '531770282589057025',
+    'ecommerce development': '531770282589057026',
+    'game design & development': '531770282589057027',
+    'mobile development': '531770282589057024',
+    'other - software development': '531770282589057032',
+    'product management': '531770282589057030',
+    'qa & testing': '531770282589057031',
+    'scripts & utilities': '531770282589057028',
+    'web & mobile design': '531770282589057029',
+    'web development': '531770282584862733',
     # writing
-    "sales & marketing copywriting": "1534904462131675136",
-    "content writing": "1301900640421842944",
-    "editing & proofreading services": "531770282597445644",
-    "professional & business writing": "531770282597445646"
+    'sales & marketing copywriting': '1534904462131675136',
+    'content writing': '1301900640421842944',
+    'editing & proofreading services': '531770282597445644',
+    'professional & business writing': '531770282597445646',
 }
 
-def normalize_search_params(params: dict, credentials_provided: bool, buffer: int = 5) -> tuple[dict, int]:
+
+def normalize_search_params(
+    params: dict, credentials_provided: bool, buffer: int = 5
+) -> tuple[dict, int]:
     """
     Normalize search parameters from config or input JSON for Upwork job search URL.
 
@@ -140,31 +143,31 @@ def normalize_search_params(params: dict, credentials_provided: bool, buffer: in
         limit = int(params.get('limit', 5)) + buffer
     except (ValueError, TypeError):
         limit = 5
-        logger.warning("Invalid limit value in config, using default limit of 5")
-    
+        logger.warning('Invalid limit value in config, using default limit of 5')
+
     # Set per_page parameter to the next allowed Upwork value >= limit
     allowed_per_page = [10, 20, 50]
     per_page = min([v for v in allowed_per_page if v >= limit] or [50])
     result['per_page'] = str(per_page)
-    
+
     # Fixed price categories and custom range
     if 'fixed_price_catagory_num' in params:
         amount_ranges = {
-            "1": "0-99",
-            "2": "100-499",
-            "3": "500-999",
-            "4": "1000-4999",
-            "5": "5000-"
+            '1': '0-99',
+            '2': '100-499',
+            '3': '500-999',
+            '4': '1000-4999',
+            '5': '5000-',
         }
         ranges = []
         for cat in params['fixed_price_catagory_num']:
             if cat in amount_ranges:
                 ranges.append(amount_ranges[cat])
         if params.get('fixed_min') and params.get('fixed_max'):
-            ranges.append(f"{params['fixed_min']}-{params['fixed_max']}")
+            ranges.append(f'{params["fixed_min"]}-{params["fixed_max"]}')
         if ranges:
             result['amount'] = ','.join(ranges)
-    
+
     # Client hires (convert min/max to ranges)
     if 'hires_min' in params or 'hires_max' in params:
         ranges = []
@@ -176,19 +179,19 @@ def normalize_search_params(params: dict, credentials_provided: bool, buffer: in
             ranges.append('10-')
         if ranges:
             result['client_hires'] = ','.join(ranges)
-    
+
     # Expertise level (contractor tier)
     if 'expertise_level_number' in params:
         result['contractor_tier'] = ','.join(params['expertise_level_number'])
-    
+
     # Duration
     if 'projectDuration' in params:
         result['duration_v3'] = ','.join(params['projectDuration'])
-    
+
     # Hourly rate range
     if 'hourly_min' in params and 'hourly_max' in params:
-        result['hourly_rate'] = f"{params['hourly_min']}-{params['hourly_max']}"
-    
+        result['hourly_rate'] = f'{params["hourly_min"]}-{params["hourly_max"]}'
+
     # Job type (hourly/fixed)
     job_types = []
     if params.get('hourly'):
@@ -197,40 +200,39 @@ def normalize_search_params(params: dict, credentials_provided: bool, buffer: in
         job_types.append('1')
     if job_types:
         result['t'] = ','.join(job_types)
-    
+
     # Workload mapping
     if 'workload' in params:
-        workload_map = {
-            'part_time': 'as_needed',
-            'full_time': 'full_time'
-        }
-        result['workload'] = ','.join(workload_map[w] for w in params['workload'] if w in workload_map)
-    
+        workload_map = {'part_time': 'as_needed', 'full_time': 'full_time'}
+        result['workload'] = ','.join(
+            workload_map[w] for w in params['workload'] if w in workload_map
+        )
+
     # Sort order
     if 'sort' in params:
         sort_map = {
             'relevance': 'relevance+desc',
             'newest': 'recency',
             'client_total_charge': 'client_total_charge+desc',
-            'client_rating': 'client_rating+desc'
+            'client_rating': 'client_rating+desc',
         }
         result['sort'] = sort_map.get(params['sort'], params['sort'])
-    
+
     # Query building
     q_parts = []
-    
+
     # Main query
     if params.get('query'):
         q_parts.append(params['query'])
-    
+
     # Any words (OR)
     if params.get('search_any'):
         words = params['search_any'].split()
-        q_parts.append(f"({' OR '.join(words)})")
-    
+        q_parts.append(f'({" OR ".join(words)})')
+
     if q_parts:
         result['q'] = ' AND '.join(q_parts)
-    
+
     # Pass through boolean/string params that map directly
     for key in ['contract_to_hire', 'previous_clients']:
         if key in params:
@@ -238,9 +240,9 @@ def normalize_search_params(params: dict, credentials_provided: bool, buffer: in
 
     # login required fields
     if not credentials_provided:
-        result['proposals'] = ""
-        result['payment_verified'] = ""
-        result['previous_clients'] = ""
+        result['proposals'] = ''
+        result['payment_verified'] = ''
+        result['previous_clients'] = ''
     else:
         # Proposal number (proposals filter) from a direct string input
         if 'proposal_num' in params and params['proposal_num']:
@@ -248,7 +250,6 @@ def normalize_search_params(params: dict, credentials_provided: bool, buffer: in
         # payment verified
         if 'payment_verified' in params and params['payment_verified']:
             result['payment_verified'] = '1'
-    
 
     # Categories (main category UID and subcategory UID)
     if 'category' in params and params['category']:
@@ -261,14 +262,17 @@ def normalize_search_params(params: dict, credentials_provided: bool, buffer: in
             elif cat_name_lower in UPWORK_SUBCATEGORIES:
                 sub_cat_uids.append(UPWORK_SUBCATEGORIES[cat_name_lower])
             else:
-                logger.warning(f"Category '{cat_name}' not found in any category map, skipping.")
+                logger.warning(
+                    f"Category '{cat_name}' not found in any category map, skipping."
+                )
 
         if main_cat_uids:
             result['category2_uid'] = ','.join(main_cat_uids)
         if sub_cat_uids:
             result['subcategory2_uid'] = ','.join(sub_cat_uids)
-    
+
     return result, limit
+
 
 def build_upwork_search_url(params: dict) -> str:
     """
@@ -297,23 +301,47 @@ def build_upwork_search_url(params: dict) -> str:
     minimal_keys = {'q', 'base_url'}
     if set(params.keys()).issubset(minimal_keys) or (q and len(params) == 1):
         from urllib.parse import urlencode
-        return f"{base_url}?" + urlencode({'q': q})
+
+        return f'{base_url}?' + urlencode({'q': q})
     # Otherwise, add filters if present
     url_params = {'q': q}
     filter_keys = [
-        'amount', 'client_hires', 'hourly_rate', 'payment_verified', 'per_page',
-        'sort', 't', 'contract_to_hire', 'contractor_tier', 'duration_v3',
-        'nbs', 'previous_clients', 'proposals', 'workload', 'category2_uid', 'subcategory2_uid'
+        'amount',
+        'client_hires',
+        'hourly_rate',
+        'payment_verified',
+        'per_page',
+        'sort',
+        't',
+        'contract_to_hire',
+        'contractor_tier',
+        'duration_v3',
+        'nbs',
+        'previous_clients',
+        'proposals',
+        'workload',
+        'category2_uid',
+        'subcategory2_uid',
     ]
     for k in filter_keys:
         if k in params:
             url_params[k] = params[k]
     # Add any extra params present in config/inputJson
     for k in params:
-        if k not in url_params and k not in ['base_url', 'all_words', 'any_words', 'none_words', 'exact_phrase', 'title_search', 'q']:
+        if k not in url_params and k not in [
+            'base_url',
+            'all_words',
+            'any_words',
+            'none_words',
+            'exact_phrase',
+            'title_search',
+            'q',
+        ]:
             url_params[k] = params[k]
     from urllib.parse import urlencode
-    return f"{base_url}?" + urlencode(url_params)
+
+    return f'{base_url}?' + urlencode(url_params)
+
 
 async def safe_goto(
     page: Page,
@@ -321,7 +349,7 @@ async def safe_goto(
     browser_context: BrowserContext,
     max_retries: int = 3,
     timeout: int = 30000,
-    wait_untils: list[str] = ["domcontentloaded", "networkidle"]
+    wait_untils: list[str] = ['domcontentloaded', 'networkidle'],
 ) -> Page:
     """
     Safely navigate a Playwright page to a URL with retries and error handling.
@@ -346,24 +374,29 @@ async def safe_goto(
     for attempt in range(1, max_retries + 1):
         for wait_until in wait_untils:
             try:
-                logger.debug(f"[Attempt {attempt}] goto({url}) waitUntil={wait_until}")
+                logger.debug(f'[Attempt {attempt}] goto({url}) waitUntil={wait_until}')
                 response = await page.goto(url, timeout=timeout, wait_until=wait_until)
-                logger.debug(f"[Attempt {attempt}] Navigation succeeded (waitUntil={wait_until})")
+                logger.debug(
+                    f'[Attempt {attempt}] Navigation succeeded (waitUntil={wait_until})'
+                )
                 # return working page
-                return page  
+                return page
             except TargetClosedError:
-                logger.warning("Page or browser crashed. Creating new page...")
+                logger.warning('Page or browser crashed. Creating new page...')
                 try:
                     page = await browser_context.new_page()
                 except Exception as create_exc:
-                    logger.exception("Failed to create new page after crash.")
+                    logger.exception('Failed to create new page after crash.')
                     raise create_exc
             except Exception as e:
                 last_exc = e
-                logger.debug(f"[Attempt {attempt}] goto failed: {e}")
+                logger.debug(f'[Attempt {attempt}] goto failed: {e}')
 
-    logger.error(f"⚠️ Failed to navigate to {url} after {max_retries} attempts", exc_info=last_exc)
+    logger.error(
+        f'⚠️ Failed to navigate to {url} after {max_retries} attempts', exc_info=last_exc
+    )
     raise last_exc
+
 
 async def login_process(
     login_url: str,
@@ -371,7 +404,7 @@ async def login_process(
     context: BrowserContext,
     username: str,
     password: str,
-    max_attempts: int = 2
+    max_attempts: int = 2,
 ) -> bool:
     """
     Automate the Upwork login process using Playwright, with robust retry logic.
@@ -397,31 +430,39 @@ async def login_process(
             page = await safe_goto(page, login_url, context, timeout=60000)
             await page.wait_for_selector('#login_username', timeout=10000)
             await page.fill('#login_username', username)
-            logger.debug(f"Username entered: {username}")
+            logger.debug(f'Username entered: {username}')
             await page.press('#login_username', 'Enter')
             await asyncio.sleep(2)
             await page.wait_for_selector('#login_password', timeout=10000)
             await page.fill('#login_password', password)
-            logger.debug(f"Password entered.")
+            logger.debug(f'Password entered.')
             await page.press('#login_password', 'Enter')
             await asyncio.sleep(3)
             body_text = await page.locator('body').inner_text()
             # error_texts = ['Verification failed. Please try again.', 'Please fix the errors below', 'Due to technical difficulties we are unable to process your request.']
-            if 'Verification failed. Please try again.' in body_text[:100] or 'Please fix the errors below' in body_text[:100] or "Due to technical difficulties we are unable to process your request." in body_text[:100]:
-                logger.debug(f"Verification on login failed. Attempt {attempt}/{max_attempts}")
+            if (
+                'Verification failed. Please try again.' in body_text[:100]
+                or 'Please fix the errors below' in body_text[:100]
+                or 'Due to technical difficulties we are unable to process your request.'
+                in body_text[:100]
+            ):
+                logger.debug(
+                    f'Verification on login failed. Attempt {attempt}/{max_attempts}'
+                )
                 # Try reloading or creating a new page, but do NOT clear cookies yet
                 if attempt == max_attempts // 2:
-                    logger.debug("Creating a new page due to repeated login failures.")
+                    logger.debug('Creating a new page due to repeated login failures.')
                     page = await context.new_page()
                 continue
-            logger.debug(f"Login process complete.")
-            logger.debug(f"Body text: {body_text[:100]}")
+            logger.debug(f'Login process complete.')
+            logger.debug(f'Body text: {body_text[:100]}')
             return True
         except Exception as e:
-            logger.debug(f"Login attempt {attempt} failed: {e}")
+            logger.debug(f'Login attempt {attempt} failed: {e}')
             await asyncio.sleep(3)
-    logger.error("⚠️ All login attempts failed.")
+    logger.error('⚠️ All login attempts failed.')
     return False
+
 
 async def login_and_solve(
     page: Page,
@@ -430,7 +471,7 @@ async def login_and_solve(
     password: str,
     search_url: str,
     login_url: str,
-    credentials_provided: bool
+    credentials_provided: bool,
 ) -> tuple[Page, BrowserContext]:
     """
     Navigate to Upwork, solve captcha if present, and log in if credentials are provided.
@@ -456,43 +497,77 @@ async def login_and_solve(
     # go to search url
     await safe_goto(page, search_url, context)
     # bypass captcha
-    logger.debug(f"Checking for captcha challenge...")
-    captcha_solved = await solve_captcha(queryable=page, browser_context=context, captcha_type='cloudflare', challenge_type='interstitial', solve_attempts = 5, solve_click_delay = 6, wait_checkbox_attempts = 5, wait_checkbox_delay = 5, checkbox_click_attempts = 3, attempt_delay = 5)
+    logger.debug(f'Checking for captcha challenge...')
+    captcha_solved = await solve_captcha(
+        queryable=page,
+        browser_context=context,
+        captcha_type='cloudflare',
+        challenge_type='interstitial',
+        solve_attempts=5,
+        solve_click_delay=6,
+        wait_checkbox_attempts=5,
+        wait_checkbox_delay=5,
+        checkbox_click_attempts=3,
+        attempt_delay=5,
+    )
     if captcha_solved:
-        logger.debug(f"Successfully solved captcha challenge!")
+        logger.debug(f'Successfully solved captcha challenge!')
     else:
-        logger.warning(f"⚠️ No captcha challenge detected or failed to solve captcha.")
+        logger.warning(f'⚠️ No captcha challenge detected or failed to solve captcha.')
     # if credentials are provided, login
     if credentials_provided:
-        logger.debug(f"Logging in...")
-        login_success = await login_process(login_url, page, context, username, password)
+        logger.debug(f'Logging in...')
+        login_success = await login_process(
+            login_url, page, context, username, password
+        )
         # if login fails, try clearing cookies and re-solving captcha
         if not login_success:
-            logger.error("⚠️ Login failed after all attempts.")
-            logger.info("🔴 Attempting last resort: clear cookies, re-solve captcha, and retry login...")
+            logger.error('⚠️ Login failed after all attempts.')
+            logger.info(
+                '🔴 Attempting last resort: clear cookies, re-solve captcha, and retry login...'
+            )
             try:
                 await context.clear_cookies()
                 page = await context.new_page()
                 await safe_goto(page, search_url, context)
                 # Re-solve captcha
-                captcha_solved = await solve_captcha(queryable=page, browser_context=context, captcha_type='cloudflare', challenge_type='interstitial', solve_attempts = 5, solve_click_delay = 6, wait_checkbox_attempts = 5, wait_checkbox_delay = 5, checkbox_click_attempts = 3, attempt_delay = 5)
+                captcha_solved = await solve_captcha(
+                    queryable=page,
+                    browser_context=context,
+                    captcha_type='cloudflare',
+                    challenge_type='interstitial',
+                    solve_attempts=5,
+                    solve_click_delay=6,
+                    wait_checkbox_attempts=5,
+                    wait_checkbox_delay=5,
+                    checkbox_click_attempts=3,
+                    attempt_delay=5,
+                )
                 if captcha_solved:
-                    logger.info("✅ Captcha solved after clearing cookies. Retrying login...")
+                    logger.info(
+                        '✅ Captcha solved after clearing cookies. Retrying login...'
+                    )
                 else:
-                    logger.warning("⚠️ Captcha could not be solved after clearing cookies.")
+                    logger.warning(
+                        '⚠️ Captcha could not be solved after clearing cookies.'
+                    )
                 # Retry login
-                login_success = await login_process(login_url, page, context, username, password)
+                login_success = await login_process(
+                    login_url, page, context, username, password
+                )
                 if not login_success:
-                    logger.error("⚠️Login still failed after last resort attempt (clear cookies, re-solve captcha, retry login). Aborting.")
+                    logger.error(
+                        '⚠️Login still failed after last resort attempt (clear cookies, re-solve captcha, retry login). Aborting.'
+                    )
                     # print body text
                     body_text = await page.locator('body').inner_text()
-                    logger.debug(f"Body text: {body_text}")
+                    logger.debug(f'Body text: {body_text}')
                 else:
-                    logger.info("✅ Login succeeded after last resort attempt.")
+                    logger.info('✅ Login succeeded after last resort attempt.')
                     # return page and context so that new context is used for scraping
                     return page, context
             except Exception as e:
-                logger.error(f"⚠️ Exception during last resort login attempt: {e}")
+                logger.error(f'⚠️ Exception during last resort login attempt: {e}')
     return page, context
 
 
@@ -507,8 +582,14 @@ def playwright_cookies_to_requests(cookies):
     """
     jar = requests.cookies.RequestsCookieJar()
     for cookie in cookies:
-        jar.set(cookie['name'], cookie['value'], domain=cookie['domain'], path=cookie['path'])
+        jar.set(
+            cookie['name'],
+            cookie['value'],
+            domain=cookie['domain'],
+            path=cookie['path'],
+        )
     return jar
+
 
 def _build_proxy_url_from_details(proxy_details: dict | None) -> str | None:
     """
@@ -528,7 +609,7 @@ def _build_proxy_url_from_details(proxy_details: dict | None) -> str | None:
         return None
     # Ensure scheme present for parsing
     if not server.startswith(('http://', 'https://')):
-        server = f"http://{server}"
+        server = f'http://{server}'
     parsed = urlparse(server)
     # If credentials already embedded, keep as-is
     if parsed.username or '@' in server:
@@ -540,12 +621,14 @@ def _build_proxy_url_from_details(proxy_details: dict | None) -> str | None:
     # Inject credentials
     netloc = parsed.netloc
     # If netloc contains host:port, prepend credentials
-    netloc_with_auth = f"{username}:{password}@{netloc}"
+    netloc_with_auth = f'{username}:{password}@{netloc}'
     parsed_with_auth = parsed._replace(netloc=netloc_with_auth)
     return urlunparse(parsed_with_auth)
 
 
-async def get_requests_session_from_playwright(context, page, max_retries=3, retry_delay=1, proxy_details: dict | None = None):
+async def get_requests_session_from_playwright(
+    context, page, max_retries=3, retry_delay=1, proxy_details: dict | None = None
+):
     """
     Extract cookies and user-agent from Playwright context and page, and build a requests.Session.
     Retries user-agent extraction if the execution context is destroyed.
@@ -565,32 +648,40 @@ async def get_requests_session_from_playwright(context, page, max_retries=3, ret
     user_agent = None
     for attempt in range(1, max_retries + 1):
         try:
-            user_agent = await page.evaluate("() => navigator.userAgent")
+            user_agent = await page.evaluate('() => navigator.userAgent')
             break
         except Exception as e:
-            if "Execution context was destroyed" in str(e):
-                logger.warning(f"Attempt {attempt}: Execution context destroyed while getting user-agent. Retrying...")
+            if 'Execution context was destroyed' in str(e):
+                logger.warning(
+                    f'Attempt {attempt}: Execution context destroyed while getting user-agent. Retrying...'
+                )
                 await asyncio.sleep(retry_delay)
                 if attempt == max_retries:
-                    logger.error("Failed to get user-agent after multiple retries due to navigation/context loss. Using fallback user-agent.")
-                    user_agent = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/138.0.0.0 Safari/537.36"
+                    logger.error(
+                        'Failed to get user-agent after multiple retries due to navigation/context loss. Using fallback user-agent.'
+                    )
+                    user_agent = 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/138.0.0.0 Safari/537.36'
             else:
-                logger.error(f"Unexpected error while getting user-agent: {e}. Using fallback user-agent.")
-                user_agent = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/138.0.0.0 Safari/537.36"
+                logger.error(
+                    f'Unexpected error while getting user-agent: {e}. Using fallback user-agent.'
+                )
+                user_agent = 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/138.0.0.0 Safari/537.36'
                 break
     if not user_agent:
-        user_agent = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/138.0.0.0 Safari/537.36"
+        user_agent = 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/138.0.0.0 Safari/537.36'
     session = requests.Session()
     session.cookies = playwright_cookies_to_requests(cookies)
     session.headers.update({'User-Agent': user_agent})
     # Apply proxy to requests session if provided
     proxy_url = _build_proxy_url_from_details(proxy_details)
     if proxy_url:
-        session.proxies.update({
-            'http': proxy_url,
-            'https': proxy_url,
-        })
-        logger.debug(f"session.proxies updated to: {proxy_url}")
+        session.proxies.update(
+            {
+                'http': proxy_url,
+                'https': proxy_url,
+            }
+        )
+        logger.debug(f'session.proxies updated to: {proxy_url}')
     return session
 
 
@@ -615,24 +706,30 @@ def get_job_urls_requests(session, search_querys, search_urls, limit=50):
         pages_needed = (limit + 49) // 50
         jobs_from_last_page = limit % 50 or 50
         for page_num in range(1, pages_needed + 1):
-            url = f"{base_url}&page={page_num}" if page_num > 1 else base_url
-            logger.debug(f"[requests] Fetching URL: {url}")
+            url = f'{base_url}&page={page_num}' if page_num > 1 else base_url
+            logger.debug(f'[requests] Fetching URL: {url}')
             try:
                 resp = session.get(url, timeout=30)
                 resp.raise_for_status()
                 html = resp.text
-                
+
                 # Check for "log in" string in the first iteration of the first query to detect login issues
                 if page_num == 1 and query == search_querys[0]:
-                    if "log in" in html.lower():
-                        logger.warning("⚠️ 'log in' string detected in HTML response. This indicates the session may not be properly authenticated.")
-                        logger.warning(f"HTML snippet containing 'log in': {html[html.lower().find('log in'):html.lower().find('log in')+200]}")
-                
+                    if 'log in' in html.lower():
+                        logger.warning(
+                            "⚠️ 'log in' string detected in HTML response. This indicates the session may not be properly authenticated."
+                        )
+                        logger.warning(
+                            f"HTML snippet containing 'log in': {html[html.lower().find('log in') : html.lower().find('log in') + 200]}"
+                        )
+
                 soup = BeautifulSoup(html, 'html.parser')
                 articles = soup.find_all('article')
                 page_hrefs = []
                 for i, article in enumerate(articles):
-                    a_tag = article.find('a', attrs={'data-test': 'job-tile-title-link UpLink'})
+                    a_tag = article.find(
+                        'a', attrs={'data-test': 'job-tile-title-link UpLink'}
+                    )
                     if not a_tag:
                         for a in article.find_all('a', href=True):
                             if '/jobs/' in a['href'] and '~' in a['href']:
@@ -643,9 +740,11 @@ def get_job_urls_requests(session, search_querys, search_urls, limit=50):
                         match = re.search(r'~([0-9a-zA-Z]+)', href)
                         if match:
                             job_id = match.group(0)
-                            job_url = f"https://www.upwork.com/jobs/{job_id}"
+                            job_url = f'https://www.upwork.com/jobs/{job_id}'
                             page_hrefs.append(job_url)
-                logger.debug(f"Found {len(page_hrefs)} jobs on page {page_num} for query '{query}'")
+                logger.debug(
+                    f"Found {len(page_hrefs)} jobs on page {page_num} for query '{query}'"
+                )
                 if page_num == pages_needed:
                     page_hrefs = page_hrefs[:jobs_from_last_page]
                 all_hrefs.extend(page_hrefs)
@@ -653,10 +752,12 @@ def get_job_urls_requests(session, search_querys, search_urls, limit=50):
                     all_hrefs = all_hrefs[:limit]
                     break
             except Exception as e:
-                logger.exception(f"[requests] Skipping page {page_num} due to navigation failures: {e}")
+                logger.exception(
+                    f'[requests] Skipping page {page_num} due to navigation failures: {e}'
+                )
                 continue
         search_results[query] = all_hrefs
-    logger.debug(f"[requests] Search results: {search_results}\n")
+    logger.debug(f'[requests] Search results: {search_results}\n')
     return search_results
 
 
@@ -674,21 +775,22 @@ def fetch_job_detail(session, url, credentials_provided):
     :rtype: dict or None
     """
     try:
-        logger.debug(f"[requests] Processing URL: {url}")
+        logger.debug(f'[requests] Processing URL: {url}')
         resp = session.get(url, timeout=30)
         resp.raise_for_status()
         html = resp.text
         job_id_match = re.search(r'~([0-9a-zA-Z]+)', url)
-        job_id = job_id_match.group(1) if job_id_match else "0"
+        job_id = job_id_match.group(1) if job_id_match else '0'
         attrs = extract_job_attributes(html)
         attrs['url'] = url
         attrs['job_id'] = job_id
-        logger.debug(f"[requests] Job ID: {job_id}")
+        logger.debug(f'[requests] Job ID: {job_id}')
         return attrs
     except Exception as e:
-        logger.debug(f"[requests] Failed to process {url}")
-        logger.debug(f"[requests] Error: {e}")
+        logger.debug(f'[requests] Failed to process {url}')
+        logger.debug(f'[requests] Error: {e}')
         return None
+
 
 def browser_worker_requests(session, job_urls, credentials_provided, max_workers=20):
     """
@@ -727,24 +829,26 @@ async def main(jsonInput: dict) -> list[dict]:
     :return: List of job attribute dictionaries
     :rtype: list[dict]
     """
-    logger.info("🏁 Starting Upwork Job Scraper...")
+    logger.info('🏁 Starting Upwork Job Scraper...')
     # log the current time
     start_time = time.time()
 
     # Extract credentials
-    if "credentials" in jsonInput:
-        credentials_json = jsonInput["credentials"]
+    if 'credentials' in jsonInput:
+        credentials_json = jsonInput['credentials']
     else:
         credentials_json = jsonInput
     # set username and password
     username = credentials_json.get('username', None)
     password = credentials_json.get('password', None)
     if (username and not password) or (password and not username):
-        logger.warning("Both username and password must be provided for authentication. One is missing.")
+        logger.warning(
+            'Both username and password must be provided for authentication. One is missing.'
+        )
     credentials_provided = username and password
     # Extract search params
     search_params = jsonInput.get('search', {})
-    
+
     # If still not present, fallback to defaults
     if not search_params:
         search_params = {}
@@ -754,100 +858,137 @@ async def main(jsonInput: dict) -> list[dict]:
 
     # Normalize search params and get limit
     buffer = 20
-    normalized_search_params, limit = normalize_search_params(search_params, credentials_provided, buffer)
+    normalized_search_params, limit = normalize_search_params(
+        search_params, credentials_provided, buffer
+    )
 
     # Build search URL using the function
-    logger.info("🏗️  Building search URL...")
+    logger.info('🏗️  Building search URL...')
     search_url = build_upwork_search_url(normalized_search_params)
-    logger.debug(f"Search URL: {search_url}")
+    logger.debug(f'Search URL: {search_url}')
 
     # Visit Upwork login page
-    login_url = "https://www.upwork.com/ab/account-security/login"
+    login_url = 'https://www.upwork.com/ab/account-security/login'
 
     NUM_DETAIL_WORKERS = 25
 
-    search_queries = [search_params.get('query', search_params.get('search_any', 'search'))]
+    search_queries = [
+        search_params.get('query', search_params.get('search_any', 'search'))
+    ]
     search_urls = [search_url]
-    
+
     # proxy
     proxy_details = jsonInput.get('proxy_details', None)
-    
-    logger.debug(f"proxy_details: {proxy_details}")
-    
-    
+
+    logger.debug(f'proxy_details: {proxy_details}')
+
     # Only one browser for login/captcha
-    async with AsyncCamoufox(headless=True, geoip=True, humanize=True, i_know_what_im_doing=True, config={'forceScopeAccess': True}, disable_coop=True, proxy=proxy_details) as browser:
-        logger.info("🌐 Creating browser/context/page for login...")
+    async with AsyncCamoufox(
+        headless=False,
+        geoip=True,
+        humanize=True,
+        i_know_what_im_doing=True,
+        config={'forceScopeAccess': True},
+        disable_coop=True,
+        proxy=proxy_details,
+    ) as browser:
+        logger.info('🌐 Creating browser/context/page for login...')
         try:
             context = await browser.new_context()
             page = await context.new_page()
         except Exception as e:
-            logger.error(f"⚠️ Error creating browser: {e}")
+            logger.error(f'⚠️ Error creating browser: {e}')
             sys.exit(1)
         try:
-            logger.info("🔒 Solving Captcha and Logging in...")
-            page, context = await login_and_solve(page, context, username, password, search_url, login_url, credentials_provided)
+            logger.info('🔒 Solving Captcha and Logging in...')
+            page, context = await login_and_solve(
+                page,
+                context,
+                username,
+                password,
+                search_url,
+                login_url,
+                credentials_provided,
+            )
         except Exception as e:
-            logger.error(f"⚠️ Error logging in: {e}")
+            logger.error(f'⚠️ Error logging in: {e}')
             sys.exit(1)
         # Extract cookies and user-agent, build requests session
-        session = await get_requests_session_from_playwright(context, page, proxy_details=proxy_details)
+        session = await get_requests_session_from_playwright(
+            context, page, proxy_details=proxy_details
+        )
     # Use requests for all scraping
     try:
-        logger.info("💼 Getting Related Jobs...")
-        job_urls_dict = get_job_urls_requests(session, search_queries, search_urls, limit=limit)
+        logger.info('💼 Getting Related Jobs...')
+        job_urls_dict = get_job_urls_requests(
+            session, search_queries, search_urls, limit=limit
+        )
         job_urls = list(job_urls_dict.values())[0]
-        logger.debug(f"Got {len(job_urls)} job URLs.")
+        logger.debug(f'Got {len(job_urls)} job URLs.')
     except Exception as e:
-        logger.error(f"⚠️ Error getting jobs: {e}")
+        logger.error(f'⚠️ Error getting jobs: {e}')
         sys.exit(1)
     # Process jobs with requests
     try:
-        logger.info("🏢 Getting Job Attributes with requests...")
-        job_attributes = browser_worker_requests(session, job_urls, credentials_provided, max_workers=NUM_DETAIL_WORKERS)
+        logger.info('🏢 Getting Job Attributes with requests...')
+        job_attributes = browser_worker_requests(
+            session, job_urls, credentials_provided, max_workers=NUM_DETAIL_WORKERS
+        )
     except Exception as e:
-        logger.error(f"⚠️ Error getting job attributes: {e}")
+        logger.error(f'⚠️ Error getting job attributes: {e}')
         sys.exit(1)
     # Filter out jobs where Nuxt data was missing (i.e., job is None)
     # job_attributes = [job for job in job_attributes if job is not None and all(v is not None for v in job.values())]
-    logger.debug(f"job_attributes after filter: {len(job_attributes)}")
+    logger.debug(f'job_attributes after filter: {len(job_attributes)}')
     # Trim to the original limit
-    logger.debug(f"limit: {limit-buffer}")
-    job_attributes = job_attributes[:limit-buffer]
+    logger.debug(f'limit: {limit - buffer}')
+    job_attributes = job_attributes[: limit - buffer]
     # Push to Apify dataset if running on Apify
-    if os.environ.get("ACTOR_INPUT_KEY"):
+    if os.environ.get('ACTOR_INPUT_KEY'):
         for item in job_attributes:
             await Actor.push_data(item)
     if save_csv:
+        os.makedirs('data/jobs/csv', exist_ok=True)
         df = pd.DataFrame(job_attributes)
         df = df.sort_index(axis=1)
-        df.to_csv(f'data/jobs/csv/job_results_{datetime.datetime.now().strftime("%Y%m%d_%H%M%S")}.csv', index=False)
+        df.to_csv(
+            f'data/jobs/csv/job_results_{datetime.datetime.now().strftime("%Y%m%d_%H%M%S")}.csv',
+            index=False,
+        )
     end_time = time.time()
     elapsed = end_time - start_time
-    logger.info("🏁 Job Fetch Complete!")
-    logger.info(f"🎯 Number of results: {len(job_attributes)}")
+    logger.info('🏁 Job Fetch Complete!')
+    logger.info(f'🎯 Number of results: {len(job_attributes)}')
     # Log number of unique columns across all job records
-    num_columns = len(set().union(*(job.keys() for job in job_attributes))) if job_attributes else 0
-    logger.info(f"🧩 Number of columns: {num_columns}")
+    num_columns = (
+        len(set().union(*(job.keys() for job in job_attributes)))
+        if job_attributes
+        else 0
+    )
+    logger.info(f'🧩 Number of columns: {num_columns}')
     minutes = int(elapsed // 60)
     seconds = int(elapsed % 60)
-    logger.info(f"🕒 Total run time: {minutes}m {seconds}s ({elapsed:.2f} seconds)")
+    logger.info(f'🕒 Total run time: {minutes}m {seconds}s ({elapsed:.2f} seconds)')
     return job_attributes
 
 
-if __name__ == "__main__":
+if __name__ == '__main__':
     # set argparse
-    parser = argparse.ArgumentParser(description="Upwork Job Scraper")
-    parser.add_argument('--jsonInput', type=str, help='JSON string or path to JSON file with credentials and other info')
+    parser = argparse.ArgumentParser(description='Upwork Job Scraper')
+    parser.add_argument(
+        '--jsonInput',
+        type=str,
+        help='JSON string or path to JSON file with credentials and other info',
+    )
     args = parser.parse_args()
 
     # set logger
-    logger_obj = Logger(level="DEBUG")
+    logger_obj = Logger(level='DEBUG')
     logger = logger_obj.get_logger()
 
     # Load credentials/input data from environment variable or argument
-    if os.environ.get("jsonInput"):
-        json_input_str = os.environ.get("jsonInput")
+    if os.environ.get('jsonInput'):
+        json_input_str = os.environ.get('jsonInput')
         try:
             input_data = json.loads(json_input_str)
         except json.JSONDecodeError:
@@ -855,17 +996,19 @@ if __name__ == "__main__":
                 # It might be a dict string, so we can use ast.literal_eval
                 input_data = ast.literal_eval(json_input_str)
             except (ValueError, SyntaxError) as e:
-                logger.error(f"⚠️ Failed to parse jsonInput from environment variable: {e}")
+                logger.error(
+                    f'⚠️ Failed to parse jsonInput from environment variable: {e}'
+                )
                 sys.exit(1)
     # load from argument
     elif args.jsonInput:
         try:
             input_data = json.loads(args.jsonInput)
         except json.JSONDecodeError as e:
-            logger.error(f"⚠️ Failed to parse input JSON: {e}")
+            logger.error(f'⚠️ Failed to parse input JSON: {e}')
             sys.exit(1)
     # load from apify
-    elif os.environ.get("ACTOR_INPUT_KEY"):
+    elif os.environ.get('ACTOR_INPUT_KEY'):
         from apify import Actor
 
         async def run_actor():
@@ -878,16 +1021,16 @@ if __name__ == "__main__":
             input_data = {
                 'credentials': {
                     'username': search_data.pop('username', None),
-                    'password': search_data.pop('password', None)
+                    'password': search_data.pop('password', None),
                 },
                 'search': search_data,
-                'general': {}
+                'general': {},
             }
-            
+
             proxy_configuration = await Actor.create_proxy_configuration(
                 groups=['RESIDENTIAL'],
                 country_code='US',
-                )
+            )
 
             if not proxy_configuration:
                 raise RuntimeError('No proxy configuration available.')
@@ -896,39 +1039,42 @@ if __name__ == "__main__":
             Actor.log.info(f'Proxy URL: {proxy_url}')
             # Parse Apify proxy URL into server/username/password for Playwright/Camoufox
             from urllib.parse import urlparse
+
             _p = urlparse(proxy_url)
-            _server = f"{_p.scheme}://{_p.hostname}:{_p.port}"
+            _server = f'{_p.scheme}://{_p.hostname}:{_p.port}'
             proxy_details = {'server': _server}
             if _p.username and _p.password:
                 proxy_details['username'] = _p.username
                 proxy_details['password'] = _p.password
             input_data['proxy_details'] = proxy_details
-            
+
             # set logger
             log_level = search_data.pop('log_level', None)
             if log_level:
                 logger_obj = Logger(level=log_level)
                 logger = logger_obj.get_logger()
             # Run your existing scraper logic
-            logger.debug(f"input_data: {input_data}")
+            logger.debug(f'input_data: {input_data}')
             result = await main(input_data)
             # exit
             await Actor.exit()
+
         # start
         asyncio.run(run_actor())
         sys.exit(0)
     # load from config.toml
     else:
         from utils.settings import config
+
         input_data = {
             'credentials': {
                 'username': config['Credentials']['username'],
-                'password': config['Credentials']['password']
+                'password': config['Credentials']['password'],
             },
             'search': config.get('Search', {}),
-            'general': config.get('General', {})
+            'general': config.get('General', {}),
         }
 
-    logger.debug(f"input_data: {input_data}")
+    logger.debug(f'input_data: {input_data}')
     asyncio.run(main(input_data))
     sys.exit(0)
