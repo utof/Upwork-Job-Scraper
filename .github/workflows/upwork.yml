@@ -26,7 +26,6 @@ jobs:
         run: |
           uv sync
           uv run playwright install --with-deps firefox
-          uv run python -c "from camoufox.pkgman import install_geoip; install_geoip()"
 
       - name: Run scraper
         env:
