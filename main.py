@@ -12,6 +12,7 @@ import os
 import re
 import sys
 import time
+import uuid
 from collections import deque
 from urllib.parse import urlparse, urlunparse
 
@@ -26,6 +27,7 @@ from playwright.async_api import TimeoutError as PlaywrightTimeoutError
 
 from camoufox_captcha import solve_captcha
 from utils.attr_extractor import extract_job_attributes
+from utils.db import get_job_count, init_db, insert_jobs_batch
 from utils.logger import Logger
 
 UPWORK_MAIN_CATEGORIES = {
@@ -833,6 +835,10 @@ async def main(jsonInput: dict) -> list[dict]:
     # log the current time
     start_time = time.time()
 
+    # Initialize database
+    init_db()
+    run_id = str(uuid.uuid4())
+
     # Extract credentials
     if 'credentials' in jsonInput:
         credentials_json = jsonInput['credentials']
@@ -883,7 +889,9 @@ async def main(jsonInput: dict) -> list[dict]:
     logger.debug(f'proxy_details: {proxy_details}')
 
     # Detect if running headless (Apify or GitHub Actions - no display available)
-    is_headless = bool(os.environ.get('ACTOR_INPUT_KEY') or os.environ.get('GITHUB_ACTIONS'))
+    is_headless = bool(
+        os.environ.get('ACTOR_INPUT_KEY') or os.environ.get('GITHUB_ACTIONS')
+    )
 
     # Only one browser for login/captcha
     async with AsyncCamoufox(
@@ -946,6 +954,14 @@ async def main(jsonInput: dict) -> list[dict]:
     # Trim to the original limit
     logger.debug(f'limit: {limit - buffer}')
     job_attributes = job_attributes[: limit - buffer]
+    # Save to SQLite database
+    search_query = search_params.get('query', '')
+    new_jobs_count = insert_jobs_batch(
+        job_attributes, run_id=run_id, search_query=search_query
+    )
+    total_jobs = get_job_count()
+    logger.info(f'💾 Saved {new_jobs_count} new jobs to database (total: {total_jobs})')
+
     # Push to Apify dataset if running on Apify
     if os.environ.get('ACTOR_INPUT_KEY'):
         for item in job_attributes:
