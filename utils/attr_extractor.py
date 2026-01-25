@@ -77,7 +77,8 @@ class JobAttrExtractor:
             'ts_create',
             'ts_publish',
             'type',
-            'url'
+            'url',
+            'location_restriction'
         ]
     
     def extract_from_html(self, html_content: str) -> Dict[str, Any]:
@@ -715,6 +716,23 @@ class JobAttrExtractor:
                 elif '/hr' in text_lower or ' per hour' in text_lower:
                     extracted['type'] = 'Hourly'
         
+        # Look for location restriction (Worldwide, U.S. Only, etc.)
+        # Pattern: div with location pin icon followed by p tag with the restriction text
+        location_icon_divs = soup.find_all('div', class_='air3-icon')
+        for icon_div in location_icon_divs:
+            # Check if this is the location pin icon (has the map pin SVG path)
+            svg = icon_div.find('svg')
+            if svg:
+                path = svg.find('path', attrs={'d': lambda x: x and 'M12 10.5a2.1' in x})
+                if path:
+                    # Found the location icon, get the sibling p tag
+                    parent = icon_div.find_parent()
+                    if parent:
+                        p_tag = parent.find('p', class_='text-light-on-muted')
+                        if p_tag:
+                            extracted['location_restriction'] = p_tag.get_text().strip()
+                            break
+
         # Look for premium job indicators
         if 'premium' in html_content.lower():
             extracted['premium'] = True
