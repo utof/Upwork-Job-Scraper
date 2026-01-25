@@ -9,7 +9,7 @@ import toml
 config = dict  # autocomplete
 
 
-def crawl(obj: dict, func=lambda x, y: print(x, y, end="\n"), path=None):
+def crawl(obj: dict, func=lambda x, y: print(x, y, end='\n'), path=None):
     if path is None:  # path Default argument value is mutable
         path = []
     for key in obj.keys():
@@ -20,115 +20,120 @@ def crawl(obj: dict, func=lambda x, y: print(x, y, end="\n"), path=None):
 
 
 def check(value, checks, name):
-
     def get_check_value(key, default_result):
         return checks[key] if key in checks else default_result
 
     incorrect = False
     if value == {}:
-        print(f"DEBUG: Value for {name} is an empty dict and triggers incorrect.")
+        print(f'DEBUG: Value for {name} is an empty dict and triggers incorrect.')
         incorrect = True
-    if not incorrect and "type" in checks:
+    if not incorrect and 'type' in checks:
         try:
-            value = eval(checks["type"])(value)
+            value = eval(checks['type'])(value)
         except Exception as e:
-            print(f"DEBUG: Value for {name} failed type check ({checks['type']}): {value} ({e})")
+            print(
+                f'DEBUG: Value for {name} failed type check ({checks["type"]}): {value} ({e})'
+            )
             incorrect = True
     # FAILSTATE Value is not one of the options
-    if not incorrect and "options" in checks and value not in checks["options"]:
-        print(f"DEBUG: Value for {name} not in options {checks['options']}: {value}")
+    if not incorrect and 'options' in checks and value not in checks['options']:
+        print(f'DEBUG: Value for {name} not in options {checks["options"]}: {value}')
         incorrect = True
     # FAILSTATE Value doesn't match regex, or has regex but is not a string.
     if (
         not incorrect
-        and "regex" in checks
+        and 'regex' in checks
         and (
-            (isinstance(value, str) and re.match(checks["regex"], value) is None)
+            (isinstance(value, str) and re.match(checks['regex'], value) is None)
             or not isinstance(value, str)
         )
     ):
-        print(f"DEBUG: Value for {name} failed regex {checks['regex']}: {value}")
+        print(f'DEBUG: Value for {name} failed regex {checks["regex"]}: {value}')
         incorrect = True
 
     if (
         not incorrect
-        and not hasattr(value, "__iter__")
+        and not hasattr(value, '__iter__')
         and (
-            ("nmin" in checks and checks["nmin"] is not None and value < checks["nmin"])
+            ('nmin' in checks and checks['nmin'] is not None and value < checks['nmin'])
             or (
-                "nmax" in checks
-                and checks["nmax"] is not None
-                and value > checks["nmax"]
+                'nmax' in checks
+                and checks['nmax'] is not None
+                and value > checks['nmax']
             )
         )
     ):
-        print(f"DEBUG: Value for {name} failed numeric bounds nmin/nmax: {value}, checks: {checks}")
+        print(
+            f'DEBUG: Value for {name} failed numeric bounds nmin/nmax: {value}, checks: {checks}'
+        )
         incorrect = True
     if (
         not incorrect
-        and hasattr(value, "__iter__")
+        and hasattr(value, '__iter__')
         and (
             (
-                "nmin" in checks
-                and checks["nmin"] is not None
-                and len(value) < checks["nmin"]
+                'nmin' in checks
+                and checks['nmin'] is not None
+                and len(value) < checks['nmin']
             )
             or (
-                "nmax" in checks
-                and checks["nmax"] is not None
-                and len(value) > checks["nmax"]
+                'nmax' in checks
+                and checks['nmax'] is not None
+                and len(value) > checks['nmax']
             )
         )
     ):
-        print(f"DEBUG: Value for {name} failed length bounds nmin/nmax: {value}, checks: {checks}")
+        print(
+            f'DEBUG: Value for {name} failed length bounds nmin/nmax: {value}, checks: {checks}'
+        )
         incorrect = True
 
     if incorrect:
         value = handle_input(
             message=(
                 (
-                    ("\nExample: " + str(checks["example"]) + "\n")
-                    if "example" in checks
-                    else ""
+                    ('\nExample: ' + str(checks['example']) + '\n')
+                    if 'example' in checks
+                    else ''
                 )
-                + ("Non-optional ", "Optional ")[
-                    "optional" in checks and checks["optional"] is True
+                + ('Non-optional ', 'Optional ')[
+                    'optional' in checks and checks['optional'] is True
                 ]
             )
             + str(name),
-            extra_info=get_check_value("explanation", ""),
-            check_type=eval(get_check_value("type", "False")),
-            default=get_check_value("default", NotImplemented),
-            match=get_check_value("regex", ""),
-            err_message=get_check_value("input_error", "Incorrect input"),
-            nmin=get_check_value("nmin", None),
-            nmax=get_check_value("nmax", None),
+            extra_info=get_check_value('explanation', ''),
+            check_type=eval(get_check_value('type', 'False')),
+            default=get_check_value('default', NotImplemented),
+            match=get_check_value('regex', ''),
+            err_message=get_check_value('input_error', 'Incorrect input'),
+            nmin=get_check_value('nmin', None),
+            nmax=get_check_value('nmax', None),
             oob_error=get_check_value(
-                "oob_error", "Input out of bounds(Value too high/low/long/short)"
+                'oob_error', 'Input out of bounds(Value too high/low/long/short)'
             ),
-            options=get_check_value("options", None),
-            optional=get_check_value("optional", False),
+            options=get_check_value('options', None),
+            optional=get_check_value('optional', False),
         )
     return value
 
 
 def handle_input(
-    message: str = "",
+    message: str = '',
     check_type=False,
-    match: str = "",
-    err_message: str = "",
+    match: str = '',
+    err_message: str = '',
     nmin=None,
     nmax=None,
-    oob_error="",
-    extra_info="",
+    oob_error='',
+    extra_info='',
     options: list = None,
     default=NotImplemented,
     optional=False,
 ):
     if optional:
-        print(message + "\nThis is an optional value. Do you want to skip it? (y/n)")
-        if input().casefold().startswith("y"):
-            return default if default is not NotImplemented else ""
+        print(message + '\nThis is an optional value. Do you want to skip it? (y/n)')
+        if input().casefold().startswith('y'):
+            return default if default is not NotImplemented else ''
     if default is not NotImplemented:
         print(
             message
@@ -136,14 +141,14 @@ def handle_input(
             + str(default)
             + '"\nDo you want to use it?(y/n)'
         )
-        if input().casefold().startswith("y"):
+        if input().casefold().startswith('y'):
             return default
     if options is None:
         match = re.compile(match)
         print(extra_info)
         while True:
-            print(message + "=", end="")
-            user_input = input("").strip()
+            print(message + '=', end='')
+            user_input = input('').strip()
             if check_type is not False:
                 try:
                     user_input = check_type(user_input)
@@ -158,9 +163,9 @@ def handle_input(
                     # Type conversion failed
                     print(err_message)
                     continue
-            elif match != "" and re.match(match, user_input) is None:
+            elif match != '' and re.match(match, user_input) is None:
                 print(+err_message + "\nAre you absolutely sure it's correct?(y/n)")
-                if input().casefold().startswith("y"):
+                if input().casefold().startswith('y'):
                     break
                 continue
             else:
@@ -174,8 +179,8 @@ def handle_input(
         return user_input
     print(extra_info)
     while True:
-        print(message, end="")
-        user_input = input("").strip()
+        print(message, end='')
+        user_input = input('').strip()
         if check_type is not False:
             try:
                 isinstance(eval(user_input), check_type)
@@ -183,19 +188,19 @@ def handle_input(
             except:
                 print(
                     err_message
-                    + "\nValid options are: "
-                    + ", ".join(map(str, options))
-                    + "."
+                    + '\nValid options are: '
+                    + ', '.join(map(str, options))
+                    + '.'
                 )
                 continue
         if user_input in options:
             return user_input
         print(
-            err_message + "\nValid options are: " + ", ".join(map(str, options)) + "."
+            err_message + '\nValid options are: ' + ', '.join(map(str, options)) + '.'
         )
 
 
-def crawl_and_check(obj: dict, path: list, checks: dict = {}, name=""):
+def crawl_and_check(obj: dict, path: list, checks: dict = {}, name=''):
     if len(path) == 0:
         return check(obj, checks, name)
     if path[0] not in obj.keys():
@@ -217,7 +222,7 @@ def check_toml(template_file, config_file) -> Tuple[bool, Dict]:
     try:
         template = toml.load(template_file)
     except Exception as error:
-        print(f"Encountered error when trying to to load {template_file}: {error}")
+        print(f'Encountered error when trying to to load {template_file}: {error}')
         print(error)
         return False
 
@@ -228,24 +233,24 @@ def check_toml(template_file, config_file) -> Tuple[bool, Dict]:
     except toml.TomlDecodeError:
         print(f"""Couldn't read {config_file}.Overwrite it?(y/n)""")
         # attempt to overwrite config file
-        if not input().startswith("y"):
-            print("Unable to read config, and not allowed to overwrite it. Giving up.")
+        if not input().startswith('y'):
+            print('Unable to read config, and not allowed to overwrite it. Giving up.')
             return False
         else:
             try:
-                with open(config_file, "w") as f:
-                    f.write("")
+                with open(config_file, 'w') as f:
+                    f.write('')
             except:
                 print(
-                    f"Failed to overwrite {config_file}. Giving up.\nSuggestion: check {config_file} permissions for the user."
+                    f'Failed to overwrite {config_file}. Giving up.\nSuggestion: check {config_file} permissions for the user.'
                 )
                 return False
     # if file isn't found
     except FileNotFoundError:
         print(f"""Couldn't find {config_file} Creating it now.""")
         try:
-            with open(config_file, "x") as f:
-                f.write("")
+            with open(config_file, 'x') as f:
+                f.write('')
             config = {}
         except:
             print(
@@ -254,15 +259,13 @@ def check_toml(template_file, config_file) -> Tuple[bool, Dict]:
             return False
 
     crawl(template, check_vars)
-    with open(config_file, "w") as f:
+    with open(config_file, 'w') as f:
         toml.dump(config, f)
     return config
 
 
 # Get the directory where this file (config.toml) is located
-base_dir = Path(__file__).parent.parent 
-template_path = base_dir / "utils" / ".config.template.toml"
-config_path = base_dir / "config.toml"
+base_dir = Path(__file__).parent.parent
+template_path = base_dir / 'utils' / '.config.template.toml'
+config_path = base_dir / 'config.toml'
 check_toml(str(template_path), str(config_path))
-
-

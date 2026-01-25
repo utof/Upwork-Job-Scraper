@@ -18,3 +18,8 @@ dependencies = [
 [tool.ruff.format]
 # Prefer single quotes over double quotes.
 quote-style = "single"
+
+[dependency-groups]
+dev = [
+    "ruff>=0.14.14",
+]

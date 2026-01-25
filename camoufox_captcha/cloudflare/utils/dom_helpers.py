@@ -6,13 +6,12 @@ from playwright.async_api import Frame, ElementHandle
 from camoufox_captcha.common.shadow_root import search_shadow_root_elements
 
 from utils.logger import Logger
+
 logger = Logger().get_logger()
 
 
 async def get_ready_checkbox(
-        iframes: List[Frame],
-        delay: int,
-        attempts: int
+    iframes: List[Frame], delay: int, attempts: int
 ) -> Optional[Tuple[Frame, ElementHandle]]:
     """
     Accepts a list of Cloudflare iframes, sorts out detached ones, collects checkboxes from the remaining iframes,
@@ -38,14 +37,21 @@ async def get_ready_checkbox(
                     if iframe.is_detached():  # skip detached iframes
                         continue
 
-                    iframe_checkboxes = await search_shadow_root_elements(iframe, 'input[type="checkbox"]')
+                    iframe_checkboxes = await search_shadow_root_elements(
+                        iframe, 'input[type="checkbox"]'
+                    )
 
                     # add found checkboxes to the list with their parent iframe
-                    checkboxes += [(iframe, iframe_checkbox) for iframe_checkbox in iframe_checkboxes]
+                    checkboxes += [
+                        (iframe, iframe_checkbox)
+                        for iframe_checkbox in iframe_checkboxes
+                    ]
                 except Exception as e:
                     logger.debug(f'Error searching for checkboxes in iframe: {e}')
 
-            logger.debug(f'Found {len(checkboxes)} checkboxes in {len(iframes)} Cloudflare iframes')
+            logger.debug(
+                f'Found {len(checkboxes)} checkboxes in {len(iframes)} Cloudflare iframes'
+            )
 
             # filter checkboxes that are visible and ready to be clicked
             visible_checkboxes = []

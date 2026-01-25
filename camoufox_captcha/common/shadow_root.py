@@ -3,11 +3,12 @@ from typing import Union, List, Optional
 from playwright.async_api import ElementHandle, Page, Frame
 
 from utils.logger import Logger
+
 logger = Logger().get_logger()
 
 
 async def get_shadow_roots(
-        queryable: Union[Page, Frame, ElementHandle],
+    queryable: Union[Page, Frame, ElementHandle],
 ) -> List[ElementHandle]:
     """
     Get all shadow roots on the page
@@ -57,8 +58,7 @@ async def get_shadow_roots(
 
 
 async def search_shadow_root_elements(
-        queryable: Union[Page, Frame, ElementHandle],
-        selector: str
+    queryable: Union[Page, Frame, ElementHandle], selector: str
 ) -> List[ElementHandle]:
     """
     Search for elements by selector within the shadow DOM of the queryable object
@@ -71,7 +71,9 @@ async def search_shadow_root_elements(
     elements = []
 
     try:
-        shadow_roots = await get_shadow_roots(queryable)  # get all shadow roots in the queryable object
+        shadow_roots = await get_shadow_roots(
+            queryable
+        )  # get all shadow roots in the queryable object
         for shadow_root in shadow_roots:
             # find all elements by selector within the shadow root
             element_handle = await shadow_root.evaluate_handle(
@@ -90,8 +92,7 @@ async def search_shadow_root_elements(
 
 
 async def search_shadow_root_iframes(
-        queryable: Union[Page, Frame, ElementHandle],
-        src_filter: str
+    queryable: Union[Page, Frame, ElementHandle], src_filter: str
 ) -> Optional[List[Frame]]:
     """
     Search for an iframe within the shadow DOM, src of which includes the src_filter

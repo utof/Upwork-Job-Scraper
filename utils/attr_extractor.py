@@ -6,7 +6,6 @@ It handles various data sources including JSON embedded in script tags, HTML att
 """
 
 import json
-import logging
 import re
 from typing import Any, Dict, Optional
 
@@ -15,12 +14,13 @@ from bs4 import BeautifulSoup
 # Configure logging
 from .logger import Logger
 
-logger_obj = Logger(level="DEBUG")
+logger_obj = Logger(level='DEBUG')
 logger = logger_obj.get_logger()
+
 
 class JobAttrExtractor:
     """Extract job data from Upwork HTML content"""
-    
+
     def __init__(self):
         # Define the fields we want to extract
         self.target_fields = [
@@ -78,44 +78,44 @@ class JobAttrExtractor:
             'ts_publish',
             'type',
             'url',
-            'location_restriction'
+            'location_restriction',
         ]
-    
+
     def extract_from_html(self, html_content: str) -> Dict[str, Any]:
         """
         Extract job data from HTML content string
-        
+
         Args:
             html_content: HTML content as string
-            
+
         Returns:
             Dictionary containing extracted job data
         """
         try:
             soup = BeautifulSoup(html_content, 'html.parser')
             extracted_data = {}
-            
+
             # Method 1: Extract from JSON in script tags
             json_data = self._extract_json_from_scripts(soup)
             if json_data:
                 extracted_data.update(self._extract_from_json(json_data))
-            
+
             # Method 2: Extract from HTML attributes and text content
             html_data = self._extract_from_html_elements(soup)
             extracted_data.update(html_data)
-            
+
             # Method 3: Extract from meta tags and other sources
             meta_data = self._extract_from_meta_tags(soup)
             extracted_data.update(meta_data)
-            
+
             # Method 4: Extract from data attributes
             data_attrs = self._extract_from_data_attributes(soup)
             extracted_data.update(data_attrs)
-            
+
             # Method 5: Extract from HTML content and text
             html_content_data = self._extract_from_html_content(soup)
             extracted_data.update(html_content_data)
-            
+
             # Method 6: Parse Nuxt data and resolve indices
             nuxt_data = self._parse_nuxt_data(html_content)
             nuxt_lookup = {}
@@ -127,36 +127,54 @@ class JobAttrExtractor:
                     if key == 'buyer_hire_rate_pct':
                         continue
                     # Don't resolve fields that were correctly extracted from targeted blocks
-                    if key in ['client_hires', 'buyer_stats_hoursCount', 'client_reviews', 'client_rating', 'buyer_stats_totalJobsWithHires']:
+                    if key in [
+                        'client_hires',
+                        'buyer_stats_hoursCount',
+                        'client_reviews',
+                        'client_rating',
+                        'buyer_stats_totalJobsWithHires',
+                    ]:
                         continue
-                    if value != "Not found":
+                    if value != 'Not found':
                         resolved_value = self._resolve_nuxt_index(value, nuxt_lookup)
                         if resolved_value != value:
                             extracted_data[key] = resolved_value
-            
+
             self._extract_missing_fields(html_content, extracted_data, nuxt_lookup)
-            
+
             # Method 7.5: Targeted block extraction AFTER all Nuxt resolution is complete
             self._extract_targeted_block(html_content, extracted_data)
-            
+
             # Method 7.6: Clean up any remaining random values for protected fields
             self._cleanup_protected_fields(extracted_data)
-            
+
             # Method 7.7: Clean up client_total_spent to ensure it's a valid monetary value
             self._cleanup_client_total_spent(extracted_data)
-            
+
             # Method 7.8: Clean up fixed_budget_amount to ensure it only contains valid values
             self._cleanup_fixed_budget_amount(extracted_data)
-            
+
             # Method 8: Calculate hire rate percentage from resolved data
-            if 'buyer_stats_totalJobsWithHires' in extracted_data and 'buyer_jobs_postedCount' in extracted_data:
+            if (
+                'buyer_stats_totalJobsWithHires' in extracted_data
+                and 'buyer_jobs_postedCount' in extracted_data
+            ):
                 try:
                     # Extract numeric values, handling non-numeric strings
-                    jobs_with_hires_str = str(extracted_data['buyer_stats_totalJobsWithHires']).strip()
-                    total_jobs_posted_str = str(extracted_data['buyer_jobs_postedCount']).strip()
-                    
+                    jobs_with_hires_str = str(
+                        extracted_data['buyer_stats_totalJobsWithHires']
+                    ).strip()
+                    total_jobs_posted_str = str(
+                        extracted_data['buyer_jobs_postedCount']
+                    ).strip()
+
                     # Only proceed if both values are numeric
-                    if jobs_with_hires_str.replace('.', '').replace('-', '').isdigit() and total_jobs_posted_str.replace('.', '').replace('-', '').isdigit():
+                    if (
+                        jobs_with_hires_str.replace('.', '').replace('-', '').isdigit()
+                        and total_jobs_posted_str.replace('.', '')
+                        .replace('-', '')
+                        .isdigit()
+                    ):
                         jobs_with_hires = int(float(jobs_with_hires_str))
                         total_jobs_posted = int(float(total_jobs_posted_str))
                         if total_jobs_posted > 0:
@@ -165,29 +183,39 @@ class JobAttrExtractor:
                                 rate_for_log = 100
                                 extracted_data['buyer_hire_rate_pct'] = 100
                             else:
-                                rate_for_log = round((jobs_with_hires / total_jobs_posted) * 100)
+                                rate_for_log = round(
+                                    (jobs_with_hires / total_jobs_posted) * 100
+                                )
                                 # Clamp any rounding anomalies
-                                extracted_data['buyer_hire_rate_pct'] = min(100, max(0, rate_for_log))
+                                extracted_data['buyer_hire_rate_pct'] = min(
+                                    100, max(0, rate_for_log)
+                                )
                     else:
                         pass
                 except (ValueError, TypeError) as e:
-                    logger.warning(f"Could not calculate hire rate: {e}")
+                    logger.warning(f'Could not calculate hire rate: {e}')
 
             # Final safeguard: if buyer_hire_rate_pct is present and > 100, cap at 100
             if 'buyer_hire_rate_pct' in extracted_data:
                 try:
-                    pct_val = int(float(str(extracted_data['buyer_hire_rate_pct']).strip()))
+                    pct_val = int(
+                        float(str(extracted_data['buyer_hire_rate_pct']).strip())
+                    )
                     if pct_val > 100:
                         extracted_data['buyer_hire_rate_pct'] = 100
                 except (ValueError, TypeError):
                     pass
 
             # Final safeguard: normalize client_total_spent (e.g., 19K -> 19000)
-            if 'client_total_spent' in extracted_data and extracted_data['client_total_spent'] not in (None, "Not found"):
-                extracted_data['client_total_spent'] = self._normalize_client_total_spent(
-                    str(extracted_data['client_total_spent'])
+            if 'client_total_spent' in extracted_data and extracted_data[
+                'client_total_spent'
+            ] not in (None, 'Not found'):
+                extracted_data['client_total_spent'] = (
+                    self._normalize_client_total_spent(
+                        str(extracted_data['client_total_spent'])
+                    )
                 )
-            
+
             # Ensure job type consistency: hourly jobs should have fixed_budget_amount = 0
             if 'type' in extracted_data and extracted_data['type'] == 'Hourly':
                 extracted_data['fixed_budget_amount'] = '0'
@@ -197,23 +225,31 @@ class JobAttrExtractor:
                     extracted_data['hourly_min'] = '0'
                 if 'hourly_max' in extracted_data:
                     extracted_data['hourly_max'] = '0'
-            
+
             # Ensure all target fields are present with default values if missing
             for field in self.target_fields:
                 if field not in extracted_data:
-                    if field in ['buyer_avgHourlyJobsRate_amount', 'client_hires', 'client_total_spent', 'hourly_min', 'hourly_max', 'fixed_budget_amount', "connects_required"]:
-                        extracted_data[field] = "0"
+                    if field in [
+                        'buyer_avgHourlyJobsRate_amount',
+                        'client_hires',
+                        'client_total_spent',
+                        'hourly_min',
+                        'hourly_max',
+                        'fixed_budget_amount',
+                        'connects_required',
+                    ]:
+                        extracted_data[field] = '0'
                     elif field == 'payment_verified':
                         extracted_data[field] = False
                     else:
-                        extracted_data[field] = ""
-            
+                        extracted_data[field] = ''
+
             return extracted_data
-            
+
         except Exception as e:
-            logger.error(f"Error extracting data from HTML: {str(e)}")
+            logger.error(f'Error extracting data from HTML: {str(e)}')
             return {}
-    
+
     def _extract_json_from_scripts(self, soup: BeautifulSoup) -> Optional[Dict]:
         """Extract JSON data from script tags"""
         try:
@@ -224,9 +260,9 @@ class JobAttrExtractor:
                 r'window\.data\s*=\s*({.*?});',
                 r'window\.job\s*=\s*({.*?});',
                 r'window\.jobData\s*=\s*({.*?});',
-                r'window\.__NUXT__\.data\s*=\s*({.*?});'
+                r'window\.__NUXT__\.data\s*=\s*({.*?});',
             ]
-            
+
             scripts = soup.find_all('script', type='text/javascript')
             for script in scripts:
                 if script.string:
@@ -238,7 +274,7 @@ class JobAttrExtractor:
                                 return json.loads(match)
                             except json.JSONDecodeError:
                                 continue
-            
+
             # Also look for JSON in script content without window assignment
             for script in scripts:
                 if script.string:
@@ -248,40 +284,42 @@ class JobAttrExtractor:
                             return json.loads(content)
                         except json.JSONDecodeError:
                             continue
-            
+
             return None
-            
+
         except Exception as e:
-            logger.error(f"Error extracting JSON from scripts: {str(e)}")
+            logger.error(f'Error extracting JSON from scripts: {str(e)}')
             return None
-    
+
     def _extract_from_json(self, json_data: Dict) -> Dict[str, Any]:
         """Extract target fields from JSON data"""
         extracted = {}
-        
-        def search_in_dict(data, path=""):
+
+        def search_in_dict(data, path=''):
             """Recursively search for target fields in nested dictionary"""
             if isinstance(data, dict):
                 for key, value in data.items():
-                    current_path = f"{path}.{key}" if path else key
-                    
+                    current_path = f'{path}.{key}' if path else key
+
                     # Check if this key matches any target field
                     for target_field in self.target_fields:
-                        if key == target_field or current_path.endswith(f".{target_field}"):
+                        if key == target_field or current_path.endswith(
+                            f'.{target_field}'
+                        ):
                             extracted[target_field] = value
-                    
+
                     # Recursively search nested dictionaries
                     if isinstance(value, dict):
                         search_in_dict(value, current_path)
                     elif isinstance(value, list):
                         for i, item in enumerate(value):
                             if isinstance(item, dict):
-                                search_in_dict(item, f"{current_path}[{i}]")
+                                search_in_dict(item, f'{current_path}[{i}]')
             elif isinstance(data, list):
                 for i, item in enumerate(data):
                     if isinstance(item, dict):
-                        search_in_dict(item, f"{path}[{i}]")
-        
+                        search_in_dict(item, f'{path}[{i}]')
+
         search_in_dict(json_data)
         return extracted
 
@@ -290,34 +328,34 @@ class JobAttrExtractor:
         # Look for the __NUXT_DATA__ script tag
         nuxt_pattern = r'<script[^>]*id="__NUXT_DATA__"[^>]*>(.*?)</script>'
         match = re.search(nuxt_pattern, html_content, re.DOTALL)
-        
+
         if not match:
-            logger.warning("Could not find __NUXT_DATA__ script tag")
+            logger.warning('Could not find __NUXT_DATA__ script tag')
             return None
-        
+
         try:
             # Parse the JSON data
             nuxt_data = json.loads(match.group(1))
             return nuxt_data
         except json.JSONDecodeError as e:
-            logger.error(f"Failed to parse __NUXT_DATA__ JSON: {e}")
+            logger.error(f'Failed to parse __NUXT_DATA__ JSON: {e}')
             return None
 
     def _build_nuxt_lookup(self, nuxt_data):
         """Build a lookup dictionary from the Nuxt data array"""
         lookup = {}
-        
+
         if not nuxt_data or not isinstance(nuxt_data, list):
-            logger.warning("Invalid Nuxt data format")
+            logger.warning('Invalid Nuxt data format')
             return lookup
-        
+
         # The Nuxt data is a flat array where each index corresponds to a value
         # We need to build the lookup from the entire array
         for i, value in enumerate(nuxt_data):
             lookup[i] = value
             if i < 200:  # Only log first 200 entries to avoid spam
                 pass
-        
+
         return lookup
 
     def _resolve_nuxt_index(self, value, nuxt_lookup):
@@ -331,7 +369,11 @@ class JobAttrExtractor:
             if 0 <= index < len(nuxt_lookup) and index in nuxt_lookup:
                 resolved = nuxt_lookup[index]
                 # Don't resolve if the resolved value looks like an IP address or other non-meaningful data
-                if isinstance(resolved, str) and '.' in resolved and len(resolved.split('.')) == 4:
+                if (
+                    isinstance(resolved, str)
+                    and '.' in resolved
+                    and len(resolved.split('.')) == 4
+                ):
                     # This looks like an IP address, don't resolve
                     return value
                 # Don't resolve if the resolved value is a complex object (dict/list)
@@ -340,67 +382,83 @@ class JobAttrExtractor:
                     return value
                 return resolved
         return value
-    
+
     def _extract_from_html_elements(self, soup: BeautifulSoup) -> Dict[str, Any]:
         """Extract data from HTML elements"""
         extracted = {}
-        
+
         # Extract title from title tag
         title_tag = soup.find('title')
         if title_tag:
             extracted['title'] = title_tag.get_text().strip()
-        
+
         # Extract description from meta description
         meta_desc = soup.find('meta', attrs={'name': 'description'})
         if meta_desc:
             extracted['description'] = meta_desc.get('content', '').strip()
-        
+
         # Look for job-specific data in various HTML elements
         data_elements = soup.find_all(attrs={'data-test': True})
         for element in data_elements:
             data_test = element.get('data-test')
-            if data_test in ['job-title', 'job-description', 'job-budget', 'job-duration']:
+            if data_test in [
+                'job-title',
+                'job-description',
+                'job-budget',
+                'job-duration',
+            ]:
                 text_content = element.get_text().strip()
                 if text_content:
                     if data_test == 'job-title':
                         extracted['title'] = text_content
                     elif data_test == 'job-description':
                         extracted['description'] = text_content
-        
+
         return extracted
-    
+
     def _extract_from_meta_tags(self, soup: BeautifulSoup) -> Dict[str, Any]:
         """Extract data from meta tags"""
         extracted = {}
-        
+
         # Look for job-related meta tags
         meta_tags = soup.find_all('meta')
         for meta in meta_tags:
             name = meta.get('name', '').lower()
             content = meta.get('content', '')
-            
+
             if 'job' in name or 'title' in name:
                 if 'title' in name:
                     extracted['title'] = content
             elif 'description' in name:
                 extracted['description'] = content
-        
+
         return extracted
-    
+
     def _extract_from_data_attributes(self, soup: BeautifulSoup) -> Dict[str, Any]:
         """Extract data from data attributes"""
         extracted = {}
-        
+
         # Look for elements with data attributes that might contain job data
-        elements_with_data = soup.find_all(attrs=lambda x: x and isinstance(x, dict) and any(
-            attr.startswith('data-') for attr in x.keys()
-        ))
-        
+        elements_with_data = soup.find_all(
+            attrs=lambda x: x
+            and isinstance(x, dict)
+            and any(attr.startswith('data-') for attr in x.keys())
+        )
+
         for element in elements_with_data:
             for attr, value in element.attrs.items():
                 if attr.startswith('data-'):
                     # Check if this data attribute might contain job information
-                    if any(field in attr.lower() for field in ['job', 'title', 'description', 'budget', 'duration']):
+                    if any(
+                        field in attr.lower()
+                        for field in [
+                            'job',
+                            'title',
+                            'description',
+                            'budget',
+                            'duration',
+                        ]
+                    ):
                         # Try to extract meaningful data
                         if isinstance(value, str) and value.strip():
                             # Map common data attributes to our target fields
@@ -408,18 +466,18 @@ class JobAttrExtractor:
                                 extracted['title'] = value
                             elif 'description' in attr.lower():
                                 extracted['description'] = value
-        
+
         return extracted
-    
+
     def _extract_from_html_content(self, soup: BeautifulSoup) -> Dict[str, Any]:
         """Extract data from HTML content and text"""
         extracted = {}
-        
+
         # Extract title from title tag
         title_tag = soup.find('title')
         if title_tag:
             extracted['title'] = title_tag.get_text().strip()
-        
+
         # Look for job description in various elements
         description_selectors = [
             'div[data-test="job-description"]',
@@ -428,9 +486,9 @@ class JobAttrExtractor:
             '.job-description',
             '.description',
             'section[data-test="description"]',
-            'section[data-test="Description"]'  # Handle uppercase D
+            'section[data-test="Description"]',  # Handle uppercase D
         ]
-        
+
         for selector in description_selectors:
             desc_element = soup.select_one(selector)
             if desc_element:
@@ -443,7 +501,7 @@ class JobAttrExtractor:
                         desc_text = desc_element.get_text().strip()
                 else:
                     desc_text = desc_element.get_text().strip()
-                
+
                 # If the element is actually just the job type token, use it for type and skip as description
                 lowered = desc_text.lower()
                 if lowered in ('hourly', 'fixed', 'fixed-price', 'fixed price'):
@@ -453,20 +511,26 @@ class JobAttrExtractor:
                     continue
                 # Prefer substantive descriptions (avoid short tokens like "Hourly") and keep the longest
                 if desc_text and (len(desc_text) >= 40 or '\n' in desc_text):
-                    if 'description' not in extracted or len(str(extracted['description'])) < len(desc_text):
+                    if 'description' not in extracted or len(
+                        str(extracted['description'])
+                    ) < len(desc_text):
                         extracted['description'] = desc_text
                     break
-        
+
         # Look for job details in various data-test attributes
         data_test_elements = soup.find_all(attrs={'data-test': True})
         for element in data_test_elements:
             data_test = element.get('data-test', '')
             text_content = element.get_text().strip()
-            
+
             if text_content:
                 if 'job-title' in data_test or 'title' in data_test:
                     extracted['title'] = text_content
-                elif 'job-description' in data_test or 'description' in data_test or 'Description' in data_test:
+                elif (
+                    'job-description' in data_test
+                    or 'description' in data_test
+                    or 'Description' in data_test
+                ):
                     # For Description with uppercase D, look for p tag inside
                     if data_test == 'Description':
                         p_tag = element.find('p')
@@ -488,7 +552,11 @@ class JobAttrExtractor:
                     extracted['level'] = text_content
                 elif 'skills' in data_test:
                     # Extract skills as a list
-                    skills = [skill.strip() for skill in text_content.split(',') if skill.strip()]
+                    skills = [
+                        skill.strip()
+                        for skill in text_content.split(',')
+                        if skill.strip()
+                    ]
                     if skills:
                         extracted['skills'] = skills
                 elif 'deliverable' in data_test:
@@ -496,19 +564,21 @@ class JobAttrExtractor:
                     if 'qualifications' not in extracted:
                         extracted['qualifications'] = []
                     extracted['qualifications'].append(text_content)
-        
+
         # Look for specific client/buyer data using data-qa attributes
         data_qa_elements = soup.find_all(attrs={'data-qa': True})
         for element in data_qa_elements:
             data_qa = element.get('data-qa', '')
             text_content = element.get_text().strip()
-            
+
             if text_content:
                 if data_qa == 'client-hourly-rate':
                     # Extract hourly rate: "$23.45 /hr avg hourly rate paid"
                     rate_match = re.search(r'\$([\d.]+)', text_content)
                     if rate_match:
-                        extracted['buyer_avgHourlyJobsRate_amount'] = rate_match.group(1)
+                        extracted['buyer_avgHourlyJobsRate_amount'] = rate_match.group(
+                            1
+                        )
                 elif data_qa == 'client-job-posting-stats':
                     # Extract hire rate: "40% hire rate, 5 open jobs"
                     hire_rate_match = re.search(r'(\d+)% hire rate', text_content)
@@ -524,22 +594,36 @@ class JobAttrExtractor:
                         city_text = city_div.get_text().strip()
                         if city_text and city_text != 'United States':
                             # If the entire text looks like a time (e.g., "6:09" or "12:09 PM"), store as localTime only
-                            if re.match(r'^\s*\d{1,2}:\d{2}(\s*[AP]M)?\s*$', city_text, re.IGNORECASE):
-                                extracted['buyer_location_localTime'] = city_text.strip()
+                            if re.match(
+                                r'^\s*\d{1,2}:\d{2}(\s*[AP]M)?\s*$',
+                                city_text,
+                                re.IGNORECASE,
+                            ):
+                                extracted['buyer_location_localTime'] = (
+                                    city_text.strip()
+                                )
                                 # Don't set city in this case
                                 continue
                             # Handle cases where city and time are concatenated, possibly with stray letters like "Vs10:35 PM"
                             # Strategy 1: direct split by locating the time token anywhere in the string
-                            time_token = re.search(r'(\d{1,2}:\d{2}\s*(?:[AP]M)?)', city_text, re.IGNORECASE)
+                            time_token = re.search(
+                                r'(\d{1,2}:\d{2}\s*(?:[AP]M)?)',
+                                city_text,
+                                re.IGNORECASE,
+                            )
                             if time_token:
-                                city_part = city_text[:time_token.start()].strip()
+                                city_part = city_text[: time_token.start()].strip()
                                 time_part = time_token.group(1).strip()
                                 if city_part:
                                     extracted['buyer_location_city'] = city_part
                                 extracted['buyer_location_localTime'] = time_part
                             else:
                                 # Strategy 2: pattern city + optional non-digits + time at end
-                                time_match = re.search(r'^(.*?)(?:\D{0,4})?(\d{1,2}:\d{2}\s*(?:[AP]M)?)$', city_text, re.IGNORECASE)
+                                time_match = re.search(
+                                    r'^(.*?)(?:\D{0,4})?(\d{1,2}:\d{2}\s*(?:[AP]M)?)$',
+                                    city_text,
+                                    re.IGNORECASE,
+                                )
                                 if time_match:
                                     city_part = time_match.group(1).strip()
                                     time_part = time_match.group(2).strip()
@@ -552,16 +636,28 @@ class JobAttrExtractor:
                                     if len(parts) >= 2:
                                         # Detect a time token anywhere in the remainder
                                         remainder = ' '.join(parts[1:])
-                                        m = re.search(r'(\d{1,2}:\d{2}\s*(?:[AP]M)?)', remainder, re.IGNORECASE)
+                                        m = re.search(
+                                            r'(\d{1,2}:\d{2}\s*(?:[AP]M)?)',
+                                            remainder,
+                                            re.IGNORECASE,
+                                        )
                                         if m:
                                             extracted['buyer_location_city'] = parts[0]
-                                            extracted['buyer_location_localTime'] = m.group(1).strip()
+                                            extracted['buyer_location_localTime'] = (
+                                                m.group(1).strip()
+                                            )
                                         else:
                                             extracted['buyer_location_city'] = city_text
                                     else:
                                         # Single token: ensure it's not just a time before assigning as city
-                                        if re.match(r'^\s*\d{1,2}:\d{2}(\s*[AP]M)?\s*$', city_text, re.IGNORECASE):
-                                            extracted['buyer_location_localTime'] = city_text.strip()
+                                        if re.match(
+                                            r'^\s*\d{1,2}:\d{2}(\s*[AP]M)?\s*$',
+                                            city_text,
+                                            re.IGNORECASE,
+                                        ):
+                                            extracted['buyer_location_localTime'] = (
+                                                city_text.strip()
+                                            )
                                         else:
                                             extracted['buyer_location_city'] = city_text
                 elif data_qa == 'client-spend':
@@ -569,7 +665,9 @@ class JobAttrExtractor:
                     # Look for the specific pattern with $ and K in the text content
                     spend_match = re.search(r'\$([\d.]+K?)', text_content)
                     if spend_match:
-                        extracted['client_total_spent'] = self._normalize_client_total_spent(spend_match.group(1))
+                        extracted['client_total_spent'] = (
+                            self._normalize_client_total_spent(spend_match.group(1))
+                        )
                 elif data_qa == 'client-hires':
                     # Extract hires: "35 hires, 5 active"
                     hires_match = re.search(r'(\d+) hires', text_content)
@@ -585,13 +683,18 @@ class JobAttrExtractor:
                     if 'Member since' in text_content:
                         date_match = re.search(r'Member since (.+)', text_content)
                         if date_match:
-                            extracted['buyer_company_contractDate'] = date_match.group(1)
-                elif data_qa in ('client-company-profile-size', 'client-company-profile'):
+                            extracted['buyer_company_contractDate'] = date_match.group(
+                                1
+                            )
+                elif data_qa in (
+                    'client-company-profile-size',
+                    'client-company-profile',
+                ):
                     # Extract company size label from About the client block; prefer this DOM string over Nuxt indices
                     size_text = element.get_text().strip()
                     if size_text:
                         extracted['client_company_size'] = size_text
-        
+
         # Look for payment verification status
         # Check for payment verification icon and text
         payment_verified_elements = soup.find_all(class_='payment-verified')
@@ -599,10 +702,12 @@ class JobAttrExtractor:
             extracted['payment_verified'] = True
         else:
             # Alternative check: look for "Payment method verified" text
-            payment_text_elements = soup.find_all(text=lambda text: text and 'Payment method verified' in text)
+            payment_text_elements = soup.find_all(
+                text=lambda text: text and 'Payment method verified' in text
+            )
             if payment_text_elements:
                 extracted['payment_verified'] = True
-        
+
         # Look for phone verification status
         # Check for phone verification icon and text
         phone_verified_elements = soup.find_all(class_='phone-verified')
@@ -610,10 +715,12 @@ class JobAttrExtractor:
             extracted['phone_verified'] = True
         else:
             # Alternative check: look for "Phone number verified" text
-            phone_text_elements = soup.find_all(text=lambda text: text and 'Phone number verified' in text)
+            phone_text_elements = soup.find_all(
+                text=lambda text: text and 'Phone number verified' in text
+            )
             if phone_text_elements:
                 extracted['phone_verified'] = True
-        
+
         # Look for hourly rate ranges in specific HTML structure
         # Pattern: $10.00 - $25.00
         hourly_rate_elements = soup.find_all(attrs={'data-cy': 'clock-timelog'})
@@ -623,19 +730,21 @@ class JobAttrExtractor:
             if parent:
                 rate_text = parent.get_text()
                 # Extract rates like "$10.00 - $25.00"
-                rate_match = re.search(r'\$(\d+(?:\.\d{2})?)\s*-\s*\$(\d+(?:\.\d{2})?)', rate_text)
+                rate_match = re.search(
+                    r'\$(\d+(?:\.\d{2})?)\s*-\s*\$(\d+(?:\.\d{2})?)', rate_text
+                )
                 if rate_match:
                     extracted['hourly_min'] = rate_match.group(1)
                     extracted['hourly_max'] = rate_match.group(2)
                     break
-        
+
         # Look for category information in various formats
         category_elements = soup.find_all(attrs={'data-test': 'category'})
         for element in category_elements:
             text_content = element.get_text().strip()
             if text_content:
                 extracted['category'] = text_content
-        
+
         # Look for skills in various formats
         skills_elements = soup.find_all(attrs={'data-test': 'skills'})
         if skills_elements:
@@ -646,7 +755,7 @@ class JobAttrExtractor:
                     skills_list.append(text_content)
             if skills_list:
                 extracted['skills'] = skills_list
-        
+
         # Look for skills in the specific HTML structure with air3-badge
         skills_badges = soup.find_all('a', class_='air3-badge')
         if skills_badges:
@@ -660,7 +769,7 @@ class JobAttrExtractor:
                         skills_list.append(skill_text)
             if skills_list:
                 extracted['skills'] = skills_list
-        
+
         # Also look for skills in skills-list containers
         skills_containers = soup.find_all('div', class_='skills-list')
         if skills_containers:
@@ -676,7 +785,7 @@ class JobAttrExtractor:
                             skills_list.append(skill_text)
             if skills_list:
                 extracted['skills'] = skills_list
-        
+
         # Look for questions
         questions_elements = soup.find_all(attrs={'data-test': 'questions'})
         if questions_elements:
@@ -687,7 +796,7 @@ class JobAttrExtractor:
                     questions_list.append(text_content)
             if questions_list:
                 extracted['questions'] = questions_list
-        
+
         # Look for specific job information in the content
         # Extract deliverables
         deliverables = soup.find_all(attrs={'data-test': 'deliverable'})
@@ -699,7 +808,7 @@ class JobAttrExtractor:
                     qual_list.append(text)
             if qual_list:
                 extracted['qualifications'] = qual_list
-        
+
         # Look for job type information (prefer explicit signals, avoid defaulting)
         html_content = str(soup)
         if 'type' not in extracted:
@@ -715,7 +824,7 @@ class JobAttrExtractor:
                     extracted['type'] = 'Fixed'
                 elif '/hr' in text_lower or ' per hour' in text_lower:
                     extracted['type'] = 'Hourly'
-        
+
         # Look for location restriction (Worldwide, U.S. Only, etc.)
         # Pattern: div with location pin icon followed by p tag with the restriction text
         location_icon_divs = soup.find_all('div', class_='air3-icon')
@@ -723,7 +832,9 @@ class JobAttrExtractor:
             # Check if this is the location pin icon (has the map pin SVG path)
             svg = icon_div.find('svg')
             if svg:
-                path = svg.find('path', attrs={'d': lambda x: x and 'M12 10.5a2.1' in x})
+                path = svg.find(
+                    'path', attrs={'d': lambda x: x and 'M12 10.5a2.1' in x}
+                )
                 if path:
                     # Found the location icon, get the sibling p tag
                     parent = icon_div.find_parent()
@@ -736,53 +847,57 @@ class JobAttrExtractor:
         # Look for premium job indicators
         if 'premium' in html_content.lower():
             extracted['premium'] = True
-        
+
         # Look for contract to hire indicators
-        if 'contract to hire' in html_content.lower() or 'contract-to-hire' in html_content.lower():
+        if (
+            'contract to hire' in html_content.lower()
+            or 'contract-to-hire' in html_content.lower()
+        ):
             extracted['isContractToHire'] = True
-        
+
         # Look for enterprise job indicators
         if 'enterprise' in html_content.lower():
             extracted['enterpriseJob'] = True
-        
+
         # Look for job URL
         url_patterns = [
             r'href="(/jobs/[^"]*)"',
             r'href="(/freelance-jobs/[^"]*)"',
             r'data-test="job-url"[^>]*href="([^"]*)"',
-            r'class="job-url"[^>]*href="([^"]*)"'
+            r'class="job-url"[^>]*href="([^"]*)"',
         ]
-        
+
         for pattern in url_patterns:
             matches = re.findall(pattern, html_content, re.IGNORECASE)
             if matches:
                 extracted['url'] = matches[0]
                 break
-    
-        
+
         # Look for skills in various formats
         skills_patterns = [
             r'data-test="skills"[^>]*>([^<]+)<',
             r'class="skills"[^>]*>([^<]+)<',
-            r'<span[^>]*class="[^"]*skill[^"]*"[^>]*>([^<]+)</span>'
+            r'<span[^>]*class="[^"]*skill[^"]*"[^>]*>([^<]+)</span>',
         ]
-        
+
         for pattern in skills_patterns:
             matches = re.findall(pattern, html_content, re.IGNORECASE)
             if matches:
                 skills_text = matches[0]
-                skills = [skill.strip() for skill in skills_text.split(',') if skill.strip()]
+                skills = [
+                    skill.strip() for skill in skills_text.split(',') if skill.strip()
+                ]
                 if skills:
                     extracted['skills'] = skills
                 break
-        
+
         # Look for budget information
         budget_patterns = [
             r'\$(\d+(?:,\d{3})*(?:\.\d{2})?)',
             r'(\d+(?:,\d{3})*(?:\.\d{2})?)\s*USD',
-            r'budget[^>]*>([^<]+)<'
+            r'budget[^>]*>([^<]+)<',
         ]
-        
+
         for pattern in budget_patterns:
             matches = re.findall(pattern, html_content, re.IGNORECASE)
             if matches:
@@ -794,13 +909,13 @@ class JobAttrExtractor:
                     else:
                         extracted['hourly_max'] = matches[0]
                 break
-        
+
         # Look for duration information
         duration_patterns = [
             r'duration[^>]*>([^<]+)<',
-            r'<span[^>]*class="[^"]*duration[^"]*"[^>]*>([^<]+)</span>'
+            r'<span[^>]*class="[^"]*duration[^"]*"[^>]*>([^<]+)</span>',
         ]
-        
+
         for pattern in duration_patterns:
             matches = re.findall(pattern, html_content, re.IGNORECASE)
             if matches:
@@ -816,30 +931,35 @@ class JobAttrExtractor:
             if m:
                 # Preserve original casing from the match
                 extracted['duration'] = m.group(1)
-        
+
         # Look for level information
         level_patterns = [
             r'level[^>]*>([^<]+)<',
             r'<span[^>]*class="[^"]*level[^"]*"[^>]*>([^<]+)</span>',
             r'(Entry|Intermediate|Expert|Advanced)',
             r'experience[^>]*level[^>]*>([^<]+)<',
-            r'<div[^>]*class="[^"]*level[^"]*"[^>]*>([^<]+)</div>'
+            r'<div[^>]*class="[^"]*level[^"]*"[^>]*>([^<]+)</div>',
         ]
-        
+
         for pattern in level_patterns:
             matches = re.findall(pattern, html_content, re.IGNORECASE)
             if matches:
                 level_value = matches[0].strip()
                 # Only use if it looks like a meaningful level, not CSS
-                if level_value and not any(css_indicator in level_value for css_indicator in ['{', '}', ':', ';', '.', '#']):
+                if level_value and not any(
+                    css_indicator in level_value
+                    for css_indicator in ['{', '}', ':', ';', '.', '#']
+                ):
                     extracted['level'] = level_value
                     break
-        
+
         return extracted
-    
-    def _extract_missing_fields(self, html_content: str, extracted: Dict[str, Any], nuxt_lookup: Dict = None):
+
+    def _extract_missing_fields(
+        self, html_content: str, extracted: Dict[str, Any], nuxt_lookup: Dict = None
+    ):
         """Enhanced method to extract missing fields using various patterns"""
-        
+
         # Look for data in script tags with more patterns
         script_patterns = [
             r'window\.__NUXT__\s*=\s*({.*?});',
@@ -849,9 +969,9 @@ class JobAttrExtractor:
             r'window\.jobData\s*=\s*({.*?});',
             r'window\.__NUXT__\.data\s*=\s*({.*?});',
             r'window\.__NUXT__\.state\s*=\s*({.*?});',
-            r'window\.__NUXT__\.payload\s*=\s*({.*?});'
+            r'window\.__NUXT__\.payload\s*=\s*({.*?});',
         ]
-        
+
         # Also look for Nuxt data in the HTML content directly
         nuxt_patterns = [
             r'"createdOn":(\d+)',
@@ -924,9 +1044,9 @@ class JobAttrExtractor:
             # Hourly rate patterns
             r'\$(\d+(?:\.\d{2})?)',
             r'hourly[^>]*min[^>]*>(\d+(?:\.\d{2})?)<',
-            r'hourly[^>]*max[^>]*>(\d+(?:\.\d{2})?)<'
+            r'hourly[^>]*max[^>]*>(\d+(?:\.\d{2})?)<',
         ]
-        
+
         # Map Nuxt patterns to our target fields
         nuxt_field_mapping = {
             'createdOn': 'ts_create',
@@ -966,15 +1086,10 @@ class JobAttrExtractor:
             'isEnterprise': 'enterpriseJob',
             'contractDate': 'buyer_company_contractDate',
             # Additional mappings
-            'name': 'category_name',
             'urlSlug': 'category_urlSlug',
-            'industry': 'client_industry',
-            'size': 'client_company_size',
-            'isPhoneVerified': 'phone_verified',
-            'isContractToHire': 'isContractToHire',
-            'lastBuyerActivity': 'lastBuyerActivity'
+            'lastBuyerActivity': 'lastBuyerActivity',
         }
-        
+
         # Extract Nuxt data using patterns
         for pattern in nuxt_patterns:
             matches = re.findall(pattern, html_content, re.IGNORECASE)
@@ -985,14 +1100,17 @@ class JobAttrExtractor:
                         # Only set if field is truly missing or has invalid value
                         # For numeric fields, also check if current value is not a valid number
                         should_set_value = (
-                            target_field not in extracted or 
-                            extracted[target_field] == "Not found" or 
-                            extracted[target_field] is None or 
-                            extracted[target_field] == ""
+                            target_field not in extracted
+                            or extracted[target_field] == 'Not found'
+                            or extracted[target_field] is None
+                            or extracted[target_field] == ''
                         )
-                        
+
                         # Don't overwrite client_total_spent if it's already been correctly extracted and normalized
-                        if target_field == 'client_total_spent' and target_field in extracted:
+                        if (
+                            target_field == 'client_total_spent'
+                            and target_field in extracted
+                        ):
                             # Always prioritize HTML-extracted values over Nuxt data
                             # Only overwrite if the current value is clearly invalid
                             if self._is_valid_monetary_value(extracted[target_field]):
@@ -1000,19 +1118,41 @@ class JobAttrExtractor:
                             else:
                                 # Current value is not valid, allow overwriting
                                 pass
-                        
+
                         # Don't overwrite fixed_budget_amount with random Nuxt values
-                        if target_field == 'fixed_budget_amount' and target_field in extracted:
+                        if (
+                            target_field == 'fixed_budget_amount'
+                            and target_field in extracted
+                        ):
                             # Only allow overwriting if current value is clearly invalid
-                            if self._is_valid_monetary_value(extracted[target_field]) and extracted[target_field] != "0":
+                            if (
+                                self._is_valid_monetary_value(extracted[target_field])
+                                and extracted[target_field] != '0'
+                            ):
                                 should_set_value = False
                             else:
                                 # Current value is invalid or 0, allow overwriting
                                 pass
-                        
+
                         # For specific numeric fields, also check if current value is not a valid number
-                        if target_field in ['buyer_stats_hoursCount', 'buyer_stats_totalJobsWithHires', 'client_hires', 'client_reviews', 'client_rating', 'buyer_hire_rate_pct', 'buyer_avgHourlyJobsRate_amount', 'hourly_min', 'hourly_max', 'fixed_budget_amount']:
-                            if target_field in extracted and extracted[target_field] != "Not found" and extracted[target_field] is not None and extracted[target_field] != "":
+                        if target_field in [
+                            'buyer_stats_hoursCount',
+                            'buyer_stats_totalJobsWithHires',
+                            'client_hires',
+                            'client_reviews',
+                            'client_rating',
+                            'buyer_hire_rate_pct',
+                            'buyer_avgHourlyJobsRate_amount',
+                            'hourly_min',
+                            'hourly_max',
+                            'fixed_budget_amount',
+                        ]:
+                            if (
+                                target_field in extracted
+                                and extracted[target_field] != 'Not found'
+                                and extracted[target_field] is not None
+                                and extracted[target_field] != ''
+                            ):
                                 try:
                                     # If current value is a valid number, don't overwrite it
                                     float(extracted[target_field])
@@ -1020,7 +1160,7 @@ class JobAttrExtractor:
                                 except (ValueError, TypeError):
                                     # Current value is not a valid number, allow overwriting
                                     should_set_value = True
-                        
+
                         if should_set_value:
                             value = matches[0].strip()
                             if value and self._is_valid_value(value):
@@ -1029,41 +1169,73 @@ class JobAttrExtractor:
                                     extracted[target_field] = value.lower() == 'true'
                                 else:
                                     # Normalize monetary fields if needed
-                                    if target_field in ['client_total_spent', 'hourly_min', 'hourly_max', 'fixed_budget_amount']:
+                                    if target_field in [
+                                        'client_total_spent',
+                                        'hourly_min',
+                                        'hourly_max',
+                                        'fixed_budget_amount',
+                                    ]:
                                         # Additional validation for monetary fields
                                         if self._is_valid_monetary_value(value):
                                             if target_field == 'client_total_spent':
-                                                extracted[target_field] = self._normalize_client_total_spent(value)
+                                                extracted[target_field] = (
+                                                    self._normalize_client_total_spent(
+                                                        value
+                                                    )
+                                                )
                                             else:
                                                 # For hourly rates and fixed budget, just normalize the number
-                                                extracted[target_field] = self._normalize_monetary_value(value)
+                                                extracted[target_field] = (
+                                                    self._normalize_monetary_value(
+                                                        value
+                                                    )
+                                                )
                                     else:
                                         extracted[target_field] = value
                         else:
                             # Field already has a value - check if we should skip overwriting it
                             if target_field == 'buyer_hire_rate_pct':
                                 pass  # Skip hire rate from Nuxt
-                            elif target_field in ['client_hires', 'buyer_stats_hoursCount', 'client_reviews', 'client_rating', 'buyer_stats_totalJobsWithHires']:
+                            elif target_field in [
+                                'client_hires',
+                                'buyer_stats_hoursCount',
+                                'client_reviews',
+                                'client_rating',
+                                'buyer_stats_totalJobsWithHires',
+                            ]:
                                 pass  # Skip targeted block fields from Nuxt
                             else:
                                 pass
                         break
-        
+
         # Search for location data via Nuxt index mapping present in HTML
         # Example pattern: {"offsetFromUtcMillis":139,"countryTimezone":140,"city":141,"country":142}
         loc_map_pattern = r'\{"offsetFromUtcMillis":(\d+),"countryTimezone":(\d+),"city":(\d+),"country":(\d+)\}'
         loc_map_matches = re.findall(loc_map_pattern, html_content)
         if loc_map_matches:
             try:
-                off_idx, tz_idx, city_idx, country_idx = [int(x) for x in loc_map_matches[0]]
+                off_idx, tz_idx, city_idx, country_idx = [
+                    int(x) for x in loc_map_matches[0]
+                ]
                 if nuxt_lookup:
                     if off_idx in nuxt_lookup:
-                        extracted['buyer_location_offsetFromUtcMillis'] = nuxt_lookup[off_idx]
+                        extracted['buyer_location_offsetFromUtcMillis'] = nuxt_lookup[
+                            off_idx
+                        ]
                     if tz_idx in nuxt_lookup:
-                        extracted['buyer_location_countryTimezone'] = nuxt_lookup[tz_idx]
+                        extracted['buyer_location_countryTimezone'] = nuxt_lookup[
+                            tz_idx
+                        ]
                     if city_idx in nuxt_lookup:
                         city_candidate = nuxt_lookup[city_idx]
-                        if not (isinstance(city_candidate, str) and re.match(r'^\s*\d{1,2}:\d{2}(\s*[AP]M)?\s*$', city_candidate, re.IGNORECASE)):
+                        if not (
+                            isinstance(city_candidate, str)
+                            and re.match(
+                                r'^\s*\d{1,2}:\d{2}(\s*[AP]M)?\s*$',
+                                city_candidate,
+                                re.IGNORECASE,
+                            )
+                        ):
                             extracted['buyer_location_city'] = city_candidate
                     if country_idx in nuxt_lookup:
                         extracted['client_country'] = nuxt_lookup[country_idx]
@@ -1074,19 +1246,36 @@ class JobAttrExtractor:
         if nuxt_lookup and 'buyer_location_countryTimezone' not in extracted:
             for idx, value in nuxt_lookup.items():
                 # Detect likely offset millis values by numeric magnitude (~hours in ms)
-                if isinstance(value, int) and 1000 * 60 * 30 <= abs(value) <= 1000 * 60 * 60 * 24:
+                if (
+                    isinstance(value, int)
+                    and 1000 * 60 * 30 <= abs(value) <= 1000 * 60 * 60 * 24
+                ):
                     extracted['buyer_location_offsetFromUtcMillis'] = value
-                    if idx + 1 in nuxt_lookup and 'buyer_location_countryTimezone' not in extracted:
-                        extracted['buyer_location_countryTimezone'] = nuxt_lookup[idx + 1]
-                    if idx + 2 in nuxt_lookup and 'buyer_location_city' not in extracted:
+                    if (
+                        idx + 1 in nuxt_lookup
+                        and 'buyer_location_countryTimezone' not in extracted
+                    ):
+                        extracted['buyer_location_countryTimezone'] = nuxt_lookup[
+                            idx + 1
+                        ]
+                    if (
+                        idx + 2 in nuxt_lookup
+                        and 'buyer_location_city' not in extracted
+                    ):
                         city_candidate = nuxt_lookup[idx + 2]
-                        if not (isinstance(city_candidate, str) and re.match(r'^\s*\d{1,2}:\d{2}(\s*[AP]M)?\s*$', city_candidate, re.IGNORECASE)):
+                        if not (
+                            isinstance(city_candidate, str)
+                            and re.match(
+                                r'^\s*\d{1,2}:\d{2}(\s*[AP]M)?\s*$',
+                                city_candidate,
+                                re.IGNORECASE,
+                            )
+                        ):
                             extracted['buyer_location_city'] = city_candidate
                     if idx + 3 in nuxt_lookup and 'client_country' not in extracted:
                         extracted['client_country'] = nuxt_lookup[idx + 3]
                     break
-        
-        
+
         # Pattern: {"industry":13,"size":13}
         nuxt_industry_pattern = r'\{"industry":(\d+),"size":(\d+)\}'
         industry_matches = re.findall(nuxt_industry_pattern, html_content)
@@ -1099,9 +1288,12 @@ class JobAttrExtractor:
             if nuxt_lookup and industry_idx in nuxt_lookup:
                 extracted['client_industry'] = nuxt_lookup[industry_idx]
             if nuxt_lookup and size_idx in nuxt_lookup:
-                if 'client_company_size' not in extracted or extracted['client_company_size'] == "Not found":
+                if (
+                    'client_company_size' not in extracted
+                    or extracted['client_company_size'] == 'Not found'
+                ):
                     extracted['client_company_size'] = nuxt_lookup[size_idx]
-        
+
         # Pattern: "currencyCode":91},0,"USD"
         currency_pattern = r'"currencyCode":(\d+)\},[^,]*,"([^"]+)"'
         currency_matches = re.findall(currency_pattern, html_content)
@@ -1113,7 +1305,7 @@ class JobAttrExtractor:
             else:
                 # Fallback to the literal value found after the pattern
                 extracted['currency'] = currency_value
-        
+
         # Look for category and category group data
         # Pattern: {"name":84,"urlSlug":85},"Scripts & Utilities","scripts-utilities"
         category_pattern = r'\{"name":(\d+),"urlSlug":(\d+)\},"([^"]+)","([^"]+)"'
@@ -1124,7 +1316,7 @@ class JobAttrExtractor:
             extracted['category'] = category_name
             extracted['category_name'] = category_name
             extracted['category_urlSlug'] = category_url_slug
-        
+
         # Look for category group data
         # Pattern: {"name":87,"urlSlug":88},"Web, Mobile & Software Dev","web-mobile-software-dev"
         category_group_pattern = r'\{"name":(\d+),"urlSlug":(\d+)\},"([^"]+)","([^"]+)"'
@@ -1132,13 +1324,20 @@ class JobAttrExtractor:
         if category_group_matches:
             # Get the second match (category group)
             if len(category_group_matches) > 1:
-                name_id, url_slug_id, category_group_name, category_group_url_slug = category_group_matches[1]
-                if 'categoryGroup_name' not in extracted or extracted['categoryGroup_name'] == "Not found":
+                name_id, url_slug_id, category_group_name, category_group_url_slug = (
+                    category_group_matches[1]
+                )
+                if (
+                    'categoryGroup_name' not in extracted
+                    or extracted['categoryGroup_name'] == 'Not found'
+                ):
                     extracted['categoryGroup_name'] = category_group_name
-                if 'categoryGroup_urlSlug' not in extracted or extracted['categoryGroup_urlSlug'] == "Not found":
+                if (
+                    'categoryGroup_urlSlug' not in extracted
+                    or extracted['categoryGroup_urlSlug'] == 'Not found'
+                ):
                     extracted['categoryGroup_urlSlug'] = category_group_url_slug
 
-        
         for pattern in script_patterns:
             matches = re.findall(pattern, html_content, re.DOTALL)
             for match in matches:
@@ -1148,32 +1347,36 @@ class JobAttrExtractor:
                     extracted.update(json_extracted)
                 except json.JSONDecodeError:
                     continue
-        
+
         # Resolve indices to actual values using Nuxt lookup
         if nuxt_lookup:
             for key, value in extracted.items():
-                if value != "Not found":
+                if value != 'Not found':
                     resolved_value = self._resolve_nuxt_index(value, nuxt_lookup)
                     if resolved_value != value:
                         extracted[key] = resolved_value
-    
+
     def _is_valid_value(self, value: str) -> bool:
         """Check if extracted value is valid and not noise"""
         if not value or len(value) < 1:
             return False
-        
+
         # Filter out very long values that are likely noise
         if len(value) > 500:
             return False
-        
+
         # Filter out values that contain too much HTML/JSON noise
         if 'User Agreement' in value or 'Terms of Use' in value:
             return False
-        
+
         # Filter out CSS/JS noise
-        if value.startswith('li.') or value.startswith('.ma-scope') or value.startswith('@media'):
+        if (
+            value.startswith('li.')
+            or value.startswith('.ma-scope')
+            or value.startswith('@media')
+        ):
             return False
-        
+
         # Filter out values that look like IP addresses
         if '.' in value and len(value.split('.')) == 4:
             try:
@@ -1183,20 +1386,20 @@ class JobAttrExtractor:
                     return False
             except ValueError:
                 pass
-        
+
         # Filter out values that contain non-numeric characters for numeric fields
         # This will be handled by the specific field validation
-        
+
         return True
 
     def _is_valid_monetary_value(self, value: str) -> bool:
         """Check if value is a valid monetary amount"""
         if not value:
             return False
-        
+
         # Remove common currency symbols and whitespace
         cleaned = str(value).strip().replace('$', '').replace(',', '')
-        
+
         # Check if it's a valid number (with optional K suffix)
         if re.match(r'^[\d]+(?:\.\d+)?[Kk]?$', cleaned):
             # Additional validation for reasonable monetary values
@@ -1207,15 +1410,15 @@ class JobAttrExtractor:
                     total_value = num_part * 1000
                 else:
                     total_value = float(cleaned)
-                
+
                 # Reject unreasonably large values (more than $1 billion)
                 if total_value > 1000000000:
                     return False
-                    
+
                 return True
             except (ValueError, TypeError):
                 return False
-        
+
         # Check if it's a pure number
         try:
             num_value = float(cleaned)
@@ -1228,7 +1431,7 @@ class JobAttrExtractor:
 
     def _normalize_monetary_value(self, value: str) -> str:
         """Normalize monetary values like hourly rates and fixed budget amounts.
-        
+
         Similar to _normalize_client_total_spent but for smaller amounts.
         """
         try:
@@ -1262,7 +1465,9 @@ class JobAttrExtractor:
         if hours_block_match:
             try:
                 total_assignments_str = hours_block_match.group(8)
-                hours_val_str = hours_block_match.group(9)  # The 2nd trailing value corresponds to hours
+                hours_val_str = hours_block_match.group(
+                    9
+                )  # The 2nd trailing value corresponds to hours
                 feedback_count_str = hours_block_match.group(10)
                 score_str = hours_block_match.group(11)
                 total_jobs_with_hires_str = hours_block_match.group(12)
@@ -1282,7 +1487,9 @@ class JobAttrExtractor:
                 except Exception:
                     extracted['client_rating'] = score_str
 
-                extracted['buyer_stats_totalJobsWithHires'] = str(int(float(total_jobs_with_hires_str)))
+                extracted['buyer_stats_totalJobsWithHires'] = str(
+                    int(float(total_jobs_with_hires_str))
+                )
 
             except Exception:
                 pass
@@ -1294,14 +1501,14 @@ class JobAttrExtractor:
             'client_hires': self._is_valid_hires_count,
             'buyer_stats_totalJobsWithHires': self._is_valid_jobs_with_hires,
             'client_reviews': self._is_valid_reviews_count,
-            'client_rating': self._is_valid_rating
+            'client_rating': self._is_valid_rating,
         }
-        
+
         for field, validator in protected_fields.items():
             if field in extracted:
                 value = extracted[field]
                 if not validator(value):
-                    extracted[field] = "0"  # Set to 0 instead of random values
+                    extracted[field] = '0'  # Set to 0 instead of random values
 
     def _cleanup_client_total_spent(self, extracted: Dict[str, Any]):
         """Clean up client_total_spent to ensure it's a valid monetary value"""
@@ -1316,33 +1523,42 @@ class JobAttrExtractor:
                         r'(\d+(?:\.\d+)?[Kk]?)',  # Numbers with optional K
                         r'(\d+(?:,\d{3})*(?:\.\d{2})?)',  # Numbers with commas
                     ]
-                    
+
                     for pattern in monetary_patterns:
                         matches = re.findall(pattern, value)
                         for match in matches:
                             if self._is_valid_monetary_value(match):
-                                extracted['client_total_spent'] = self._normalize_client_total_spent(match)
+                                extracted['client_total_spent'] = (
+                                    self._normalize_client_total_spent(match)
+                                )
                                 return
-                
+
                 # If no valid monetary value found, set to 0
-                extracted['client_total_spent'] = "0"
+                extracted['client_total_spent'] = '0'
 
     def _cleanup_fixed_budget_amount(self, extracted: Dict[str, Any]):
         """Clean up fixed_budget_amount to ensure it only contains valid values"""
         if 'fixed_budget_amount' in extracted:
             value = extracted['fixed_budget_amount']
-            
+
             # If this is an hourly job, fixed_budget_amount should always be 0
             if 'type' in extracted and extracted['type'] == 'Hourly':
-                extracted['fixed_budget_amount'] = "0"
+                extracted['fixed_budget_amount'] = '0'
                 return
-            
+
             # If we have hourly rates, this is clearly an hourly job
-            if (('hourly_min' in extracted and extracted['hourly_min'] != '0' and extracted['hourly_min'] != '') or 
-                ('hourly_max' in extracted and extracted['hourly_max'] != '0' and extracted['hourly_max'] != '')):
-                extracted['fixed_budget_amount'] = "0"
+            if (
+                'hourly_min' in extracted
+                and extracted['hourly_min'] != '0'
+                and extracted['hourly_min'] != ''
+            ) or (
+                'hourly_max' in extracted
+                and extracted['hourly_max'] != '0'
+                and extracted['hourly_max'] != ''
+            ):
+                extracted['fixed_budget_amount'] = '0'
                 return
-            
+
             # Check if the current value is valid
             if not self._is_valid_monetary_value(value):
                 # If the value is not valid, try to find the first valid monetary value
@@ -1352,16 +1568,18 @@ class JobAttrExtractor:
                         r'(\d+(?:\.\d+)?[Kk]?)',  # Numbers with optional K
                         r'(\d+(?:,\d{3})*(?:\.\d{2})?)',  # Numbers with commas
                     ]
-                    
+
                     for pattern in monetary_patterns:
                         matches = re.findall(pattern, value)
                         for match in matches:
                             if self._is_valid_monetary_value(match):
-                                extracted['fixed_budget_amount'] = self._normalize_monetary_value(match)
+                                extracted['fixed_budget_amount'] = (
+                                    self._normalize_monetary_value(match)
+                                )
                                 return
-                
+
                 # If no valid monetary value found, set to 0
-                extracted['fixed_budget_amount'] = "0"
+                extracted['fixed_budget_amount'] = '0'
 
     def _is_valid_hours_count(self, value: str) -> bool:
         """Check if value is a valid hours count (numeric, reasonable range)"""
@@ -1435,10 +1653,10 @@ class JobAttrExtractor:
 def extract_job_attributes(html_content: str) -> Dict[str, Any]:
     """
     Extract job attributes from HTML content string
-    
+
     Args:
         html_content: HTML content as string
-        
+
     Returns:
         Dictionary containing extracted job attributes
     """

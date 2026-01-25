@@ -2,6 +2,7 @@ import logging
 import coloredlogs
 import os
 
+
 class Logger:
     # Default directories for each log level
     LOG_DIRS = {
@@ -12,7 +13,7 @@ class Logger:
         'CRITICAL': os.path.join('data', 'logging', 'states', 'critical'),
     }
 
-    def __init__(self, name="Upwork", level="DEBUG"):
+    def __init__(self, name='Upwork', level='DEBUG'):
         # Ensure all log directories exist
         for log_dir in self.LOG_DIRS.values():
             os.makedirs(log_dir, exist_ok=True)
@@ -39,9 +40,9 @@ class Logger:
         coloredlogs.install(
             level=self.logger.level,
             logger=self.logger,
-            fmt="%(asctime)s %(levelname)-8s %(name)s  %(message)s",
+            fmt='%(asctime)s %(levelname)-8s %(name)s  %(message)s',
             level_styles=level_styles,
-            field_styles=field_styles
+            field_styles=field_styles,
         )
 
     def get_logger(self):
@@ -52,4 +53,6 @@ class Logger:
         """
         Get the default directory for a given log level (case-insensitive).
         """
-        return cls.LOG_DIRS.get(level.upper(), os.path.join('data', 'logging', 'states', 'other'))
+        return cls.LOG_DIRS.get(
+            level.upper(), os.path.join('data', 'logging', 'states', 'other')
+        )
