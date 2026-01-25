@@ -1,0 +1,13 @@
+name: First Cron Job
+
+on:
+  schedule:
+    - cron: '*/5 * * * *'
+  workflow_dispatch:  # Adds manual "Run workflow" button for testing
+
+jobs:
+  cron:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Run a one-line script
+        run: echo "Hello, world!"
