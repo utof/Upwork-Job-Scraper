@@ -2,32 +2,25 @@ import argparse
 import ast
 import asyncio
 import concurrent.futures
-import contextlib
-import csv
 import datetime
-import io
 import json
-import logging
 import os
 import re
 import sys
 import time
 import uuid
-from collections import deque
 from urllib.parse import urlparse, urlunparse
 
-import js2py
 import pandas as pd
 import requests
 from bs4 import BeautifulSoup
 from camoufox import AsyncCamoufox
 from playwright._impl._errors import TargetClosedError
 from playwright.async_api import BrowserContext, Page
-from playwright.async_api import TimeoutError as PlaywrightTimeoutError
 
 from camoufox_captcha import solve_captcha
 from utils.attr_extractor import extract_job_attributes
-from utils.db import get_job_count, init_db, insert_jobs_batch
+from utils.db import get_job_count, init_db, insert_jobs_batch, job_exists
 from utils.logger import Logger
 
 UPWORK_MAIN_CATEGORIES = {
@@ -437,7 +430,7 @@ async def login_process(
             await asyncio.sleep(2)
             await page.wait_for_selector('#login_password', timeout=10000)
             await page.fill('#login_password', password)
-            logger.debug(f'Password entered.')
+            logger.debug('Password entered.')
             await page.press('#login_password', 'Enter')
             await asyncio.sleep(3)
             body_text = await page.locator('body').inner_text()
@@ -456,7 +449,7 @@ async def login_process(
                     logger.debug('Creating a new page due to repeated login failures.')
                     page = await context.new_page()
                 continue
-            logger.debug(f'Login process complete.')
+            logger.debug('Login process complete.')
             logger.debug(f'Body text: {body_text[:100]}')
             return True
         except Exception as e:
@@ -499,7 +492,7 @@ async def login_and_solve(
     # go to search url
     await safe_goto(page, search_url, context)
     # bypass captcha
-    logger.debug(f'Checking for captcha challenge...')
+    logger.debug('Checking for captcha challenge...')
     captcha_solved = await solve_captcha(
         queryable=page,
         browser_context=context,
@@ -513,12 +506,12 @@ async def login_and_solve(
         attempt_delay=5,
     )
     if captcha_solved:
-        logger.debug(f'Successfully solved captcha challenge!')
+        logger.debug('Successfully solved captcha challenge!')
     else:
-        logger.warning(f'⚠️ No captcha challenge detected or failed to solve captcha.')
+        logger.warning('⚠️ No captcha challenge detected or failed to solve captcha.')
     # if credentials are provided, login
     if credentials_provided:
-        logger.debug(f'Logging in...')
+        logger.debug('Logging in...')
         login_success = await login_process(
             login_url, page, context, username, password
         )
@@ -939,15 +932,36 @@ async def main(jsonInput: dict) -> list[dict]:
     except Exception as e:
         logger.error(f'⚠️ Error getting jobs: {e}')
         sys.exit(1)
-    # Process jobs with requests
-    try:
-        logger.info('🏢 Getting Job Attributes with requests...')
-        job_attributes = browser_worker_requests(
-            session, job_urls, credentials_provided, max_workers=NUM_DETAIL_WORKERS
-        )
-    except Exception as e:
-        logger.error(f'⚠️ Error getting job attributes: {e}')
-        sys.exit(1)
+
+    # Filter out jobs that already exist in DB (early-stop since sorted by newest)
+    new_job_urls = []
+    for url in job_urls:
+        match = re.search(r'~([0-9a-zA-Z]+)', url)
+        if match:
+            job_id = match.group(1)
+            if job_exists(job_id):
+                logger.debug(f'Job {job_id} already in DB, stopping early.')
+                break
+            new_job_urls.append(url)
+
+    logger.info(
+        f'📋 {len(new_job_urls)} new jobs to fetch (skipped {len(job_urls) - len(new_job_urls)} existing)'
+    )
+
+    # Process only new jobs
+    job_attributes = []
+    if new_job_urls:
+        try:
+            logger.info('🏢 Getting Job Attributes with requests...')
+            job_attributes = browser_worker_requests(
+                session,
+                new_job_urls,
+                credentials_provided,
+                max_workers=NUM_DETAIL_WORKERS,
+            )
+        except Exception as e:
+            logger.error(f'⚠️ Error getting job attributes: {e}')
+            sys.exit(1)
     # Filter out jobs where Nuxt data was missing (i.e., job is None)
     # job_attributes = [job for job in job_attributes if job is not None and all(v is not None for v in job.values())]
     logger.debug(f'job_attributes after filter: {len(job_attributes)}')
