@@ -882,12 +882,12 @@ async def main(jsonInput: dict) -> list[dict]:
 
     logger.debug(f'proxy_details: {proxy_details}')
 
-    # Detect if running on Apify (no display available)
-    is_apify = bool(os.environ.get('ACTOR_INPUT_KEY'))
+    # Detect if running headless (Apify or GitHub Actions - no display available)
+    is_headless = bool(os.environ.get('ACTOR_INPUT_KEY') or os.environ.get('GITHUB_ACTIONS'))
 
     # Only one browser for login/captcha
     async with AsyncCamoufox(
-        headless=is_apify,  # headless on Apify, headed locally
+        headless=is_headless,  # headless on Apify/CI, headed locally
         geoip=True,
         humanize=True,
         i_know_what_im_doing=True,
@@ -972,6 +972,10 @@ async def main(jsonInput: dict) -> list[dict]:
     minutes = int(elapsed // 60)
     seconds = int(elapsed % 60)
     logger.info(f'🕒 Total run time: {minutes}m {seconds}s ({elapsed:.2f} seconds)')
+    # Print results for CI/GitHub Actions visibility
+    if os.environ.get('GITHUB_ACTIONS'):
+        print('\n--- Job Results ---')
+        print(json.dumps(job_attributes, indent=2, default=str))
     return job_attributes
 
 

@@ -1,0 +1,45 @@
+name: Upwork Scraper
+
+on:
+  schedule:
+    - cron: "*/5 * * * *"  # Every 5 minutes
+  workflow_dispatch:       # Manual trigger
+
+jobs:
+  run-scraper:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.10"
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@v5
+
+      - name: Install dependencies
+        run: |
+          uv sync
+          uv run playwright install --with-deps firefox
+          uv run python -c "from camoufox.pkgman import install_geoip; install_geoip()"
+
+      - name: Run scraper
+        env:
+          jsonInput: |
+            {
+              "search": {
+                "query": "python developer",
+                "limit": 10
+              },
+              "general": {
+                "save_csv": false
+              }
+            }
+        run: |
+          echo "Starting Upwork scraper..."
+          uv run python main.py
