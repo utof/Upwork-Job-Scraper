@@ -220,3 +220,15 @@ def get_jobs_by_run_id(run_id: str, db_path: Path = DEFAULT_DB_PATH) -> list[dic
             'SELECT * FROM jobs WHERE run_id = ? ORDER BY created_at DESC', (run_id,)
         ).fetchall()
         return [dict(row) for row in rows]
+
+
+def get_high_scoring_jobs(
+    threshold: float = 8.0, limit: int = 10, db_path: Path = DEFAULT_DB_PATH
+) -> list[dict]:
+    """Get jobs with score >= threshold for proposal generation."""
+    with get_connection(db_path) as conn:
+        rows = conn.execute(
+            'SELECT * FROM jobs WHERE score >= ? ORDER BY score DESC LIMIT ?',
+            (threshold, limit),
+        ).fetchall()
+        return [dict(row) for row in rows]
