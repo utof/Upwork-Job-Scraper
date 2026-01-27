@@ -1,0 +1,485 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Job Review</title>
+    <link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+    <div id="app">
+        <!-- Navigation Bar -->
+        <nav class="nav-bar">
+            <button id="prevBtn" class="nav-btn" title="Previous (Left Arrow)">&larr; Prev</button>
+            <div class="nav-info">
+                <span id="jobCounter">Job 0/0</span>
+                <span id="scoreDisplay" class="score-badge">--</span>
+            </div>
+            <button id="nextBtn" class="nav-btn" title="Next (Right Arrow)">Next &rarr;</button>
+        </nav>
+
+        <!-- Sort/Filter Controls -->
+        <div class="controls">
+            <label>
+                Sort:
+                <select id="sortSelect">
+                    <option value="newest">Newest First</option>
+                    <option value="oldest">Oldest First</option>
+                    <option value="score_high">Highest Score</option>
+                    <option value="score_low">Lowest Score</option>
+                </select>
+            </label>
+            <label>
+                Min Score:
+                <input type="number" id="minScoreInput" min="0" max="10" step="0.5" placeholder="Any">
+            </label>
+            <button id="applyFilters" class="btn-secondary">Apply</button>
+        </div>
+
+        <!-- Main Job Card -->
+        <main class="job-card" id="jobCard">
+            <div class="job-header">
+                <h1 id="jobTitle" class="job-title">Loading...</h1>
+                <a id="jobLink" href="#" target="_blank" class="job-link">View on Upwork</a>
+            </div>
+
+            <div class="key-stats">
+                <span id="jobType" class="stat-item"></span>
+                <span id="jobBudget" class="stat-item"></span>
+                <span id="jobDuration" class="stat-item"></span>
+                <span id="jobLevel" class="stat-item"></span>
+            </div>
+
+            <div class="description-container">
+                <div id="jobDescription" class="job-description">
+                    No description available.
+                </div>
+            </div>
+
+            <!-- Expandable Details -->
+            <details class="more-details">
+                <summary>More Details</summary>
+                <div class="details-content">
+                    <div class="detail-row">
+                        <strong>Client:</strong>
+                        <span id="clientCountry">--</span>,
+                        <span id="clientSpent">--</span> spent,
+                        <span id="clientRating">--</span> rating,
+                        <span id="clientHires">--</span> hires
+                    </div>
+                    <div class="detail-row">
+                        <strong>Location:</strong>
+                        <span id="locationRestriction">--</span>
+                    </div>
+                    <div class="detail-row">
+                        <strong>Category:</strong>
+                        <span id="jobCategory">--</span>
+                    </div>
+                    <div class="detail-row">
+                        <strong>Skills:</strong>
+                        <span id="jobSkills" class="skills-list">--</span>
+                    </div>
+                    <div class="detail-row">
+                        <strong>Payment Verified:</strong>
+                        <span id="paymentVerified">--</span>
+                    </div>
+                    <div class="detail-row">
+                        <strong>Posted:</strong>
+                        <span id="createdAt">--</span>
+                    </div>
+                </div>
+            </details>
+
+            <!-- AI Analysis Panel -->
+            <div class="ai-panel" id="aiPanel">
+                <h3>AI Analysis</h3>
+                <div class="score-grid">
+                    <div class="score-item">
+                        <div class="score-label">Meeting Risk</div>
+                        <div id="meetingRisk" class="score-value">--</div>
+                    </div>
+                    <div class="score-item">
+                        <div class="score-label">Scope Clarity</div>
+                        <div id="scopeClarity" class="score-value">--</div>
+                    </div>
+                    <div class="score-item">
+                        <div class="score-label">Agency Fit</div>
+                        <div id="agencyFit" class="score-value">--</div>
+                    </div>
+                </div>
+                <div class="analysis-details">
+                    <div class="red-flags" id="redFlags"></div>
+                    <div class="meeting-indicators" id="meetingIndicators"></div>
+                </div>
+                <button id="scoreBtn" class="btn-secondary" style="margin-top: 10px;">Re-score with AI</button>
+            </div>
+
+            <!-- Action Buttons -->
+            <div class="action-buttons">
+                <button id="dismissBtn" class="btn-dismiss">Dismiss</button>
+                <button id="proposalBtn" class="btn-primary" disabled>Generate Proposal</button>
+            </div>
+        </main>
+
+        <!-- Stats Footer -->
+        <footer class="stats-footer">
+            <span id="statsDisplay">Loading stats...</span>
+        </footer>
+
+        <!-- Loading/Empty States -->
+        <div id="loadingState" class="state-overlay" style="display: none;">
+            <div class="spinner"></div>
+            <p>Loading jobs...</p>
+        </div>
+
+        <div id="emptyState" class="state-overlay" style="display: none;">
+            <p>No jobs to review.</p>
+            <p>Run the scraper to fetch new jobs.</p>
+        </div>
+    </div>
+
+    <script>
+        // State
+        let jobs = [];
+        let currentIndex = 0;
+        let total = 0;
+        let currentSort = 'newest';
+        let currentMinScore = null;
+
+        // Elements
+        const elements = {
+            prevBtn: document.getElementById('prevBtn'),
+            nextBtn: document.getElementById('nextBtn'),
+            jobCounter: document.getElementById('jobCounter'),
+            scoreDisplay: document.getElementById('scoreDisplay'),
+            sortSelect: document.getElementById('sortSelect'),
+            minScoreInput: document.getElementById('minScoreInput'),
+            applyFilters: document.getElementById('applyFilters'),
+            jobCard: document.getElementById('jobCard'),
+            jobTitle: document.getElementById('jobTitle'),
+            jobLink: document.getElementById('jobLink'),
+            jobType: document.getElementById('jobType'),
+            jobBudget: document.getElementById('jobBudget'),
+            jobDuration: document.getElementById('jobDuration'),
+            jobLevel: document.getElementById('jobLevel'),
+            jobDescription: document.getElementById('jobDescription'),
+            clientCountry: document.getElementById('clientCountry'),
+            clientSpent: document.getElementById('clientSpent'),
+            clientRating: document.getElementById('clientRating'),
+            clientHires: document.getElementById('clientHires'),
+            locationRestriction: document.getElementById('locationRestriction'),
+            jobCategory: document.getElementById('jobCategory'),
+            jobSkills: document.getElementById('jobSkills'),
+            paymentVerified: document.getElementById('paymentVerified'),
+            createdAt: document.getElementById('createdAt'),
+            aiPanel: document.getElementById('aiPanel'),
+            meetingRisk: document.getElementById('meetingRisk'),
+            scopeClarity: document.getElementById('scopeClarity'),
+            agencyFit: document.getElementById('agencyFit'),
+            redFlags: document.getElementById('redFlags'),
+            meetingIndicators: document.getElementById('meetingIndicators'),
+            scoreBtn: document.getElementById('scoreBtn'),
+            dismissBtn: document.getElementById('dismissBtn'),
+            proposalBtn: document.getElementById('proposalBtn'),
+            statsDisplay: document.getElementById('statsDisplay'),
+            loadingState: document.getElementById('loadingState'),
+            emptyState: document.getElementById('emptyState')
+        };
+
+        // API Functions
+        async function fetchJobs(offset = 0) {
+            const params = new URLSearchParams({
+                limit: '50',
+                offset: offset.toString(),
+                sort: currentSort
+            });
+            if (currentMinScore !== null) {
+                params.set('min_score', currentMinScore.toString());
+            }
+
+            const response = await fetch(`/api/jobs?${params}`);
+            if (!response.ok) throw new Error('Failed to fetch jobs');
+            return response.json();
+        }
+
+        async function fetchStats() {
+            const response = await fetch('/api/stats');
+            if (!response.ok) throw new Error('Failed to fetch stats');
+            return response.json();
+        }
+
+        async function dismissJob(jobId, reason = null) {
+            const response = await fetch(`/api/jobs/${jobId}/dismiss`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ reason })
+            });
+            if (!response.ok) throw new Error('Failed to dismiss job');
+            return response.json();
+        }
+
+        async function scoreJob(jobId) {
+            const response = await fetch(`/api/jobs/${jobId}/score`, {
+                method: 'POST'
+            });
+            if (!response.ok) throw new Error('Failed to score job');
+            return response.json();
+        }
+
+        // UI Functions
+        function getScoreClass(score) {
+            if (score === null || score === undefined) return '';
+            if (score >= 8) return 'score-high';
+            if (score >= 5) return 'score-medium';
+            return 'score-low';
+        }
+
+        function formatBudget(job) {
+            if (job.type === 'Hourly') {
+                const min = job.hourly_min || '?';
+                const max = job.hourly_max || '?';
+                return `$${min}-${max}/hr`;
+            } else if (job.fixed_budget_amount) {
+                return `$${job.fixed_budget_amount} fixed`;
+            }
+            return job.type || 'Unknown';
+        }
+
+        function renderJob(job) {
+            if (!job) {
+                elements.jobCard.style.display = 'none';
+                elements.emptyState.style.display = 'flex';
+                return;
+            }
+
+            elements.jobCard.style.display = 'block';
+            elements.emptyState.style.display = 'none';
+
+            // Header
+            elements.jobTitle.textContent = job.title || 'Untitled';
+            elements.jobLink.href = job.url || '#';
+
+            // Key stats
+            elements.jobType.textContent = job.type || '';
+            elements.jobBudget.textContent = formatBudget(job);
+            elements.jobDuration.textContent = job.duration || '';
+            elements.jobLevel.textContent = job.level || '';
+
+            // Description
+            elements.jobDescription.textContent = job.description || 'No description available.';
+
+            // Details
+            elements.clientCountry.textContent = job.client_country || '--';
+            elements.clientSpent.textContent = job.client_total_spent || '--';
+            elements.clientRating.textContent = job.client_rating ? `${job.client_rating}★` : '--';
+            elements.clientHires.textContent = job.client_hires || '--';
+            elements.locationRestriction.textContent = job.location_restriction || 'None';
+            elements.jobCategory.textContent = job.category || '--';
+            elements.paymentVerified.textContent = job.payment_verified ? 'Yes' : 'No';
+            elements.createdAt.textContent = job.created_at ? new Date(job.created_at).toLocaleString() : '--';
+
+            // Skills
+            const skills = job.skills;
+            if (Array.isArray(skills) && skills.length > 0) {
+                elements.jobSkills.textContent = skills.join(', ');
+            } else if (typeof skills === 'string' && skills) {
+                elements.jobSkills.textContent = skills;
+            } else {
+                elements.jobSkills.textContent = '--';
+            }
+
+            // Score badge
+            const score = job.score;
+            elements.scoreDisplay.textContent = score !== null && score !== undefined ? score.toFixed(1) : '--';
+            elements.scoreDisplay.className = 'score-badge ' + getScoreClass(score);
+
+            // AI Analysis
+            const analysis = job.ai_analysis;
+            if (analysis && typeof analysis === 'object') {
+                elements.aiPanel.style.display = 'block';
+
+                const setScoreValue = (el, value) => {
+                    el.textContent = value ?? '--';
+                    el.className = 'score-value ' + getScoreClass(value);
+                };
+
+                setScoreValue(elements.meetingRisk, analysis.meeting_risk);
+                setScoreValue(elements.scopeClarity, analysis.scope_clarity);
+                setScoreValue(elements.agencyFit, analysis.agency_fit);
+
+                // Red flags
+                if (analysis.red_flags && analysis.red_flags.length > 0) {
+                    elements.redFlags.innerHTML = '<strong>Red flags:</strong> ' +
+                        analysis.red_flags.map(f => `<span class="flag">${f}</span>`).join(', ');
+                } else {
+                    elements.redFlags.innerHTML = '';
+                }
+
+                // Meeting indicators
+                if (analysis.meeting_indicators && analysis.meeting_indicators.length > 0) {
+                    elements.meetingIndicators.innerHTML = '<strong>Meeting mentions:</strong> ' +
+                        analysis.meeting_indicators.map(m => `<em>"${m}"</em>`).join(', ');
+                } else {
+                    elements.meetingIndicators.innerHTML = '';
+                }
+            } else {
+                elements.aiPanel.style.display = 'block';
+                elements.meetingRisk.textContent = '--';
+                elements.scopeClarity.textContent = '--';
+                elements.agencyFit.textContent = '--';
+                elements.redFlags.innerHTML = '<em>Not scored yet</em>';
+                elements.meetingIndicators.innerHTML = '';
+            }
+
+            // Update counter
+            elements.jobCounter.textContent = `Job ${currentIndex + 1}/${total}`;
+
+            // Update URL hash
+            window.location.hash = `job-${currentIndex}`;
+        }
+
+        function renderStats(stats) {
+            const parts = [
+                `${stats.active_jobs} active`,
+                `${stats.scored_jobs}/${stats.total_jobs} scored`
+            ];
+            if (stats.avg_score !== null) {
+                parts.push(`avg: ${stats.avg_score}`);
+            }
+            if (stats.high_scoring > 0) {
+                parts.push(`${stats.high_scoring} high-scoring`);
+            }
+            elements.statsDisplay.textContent = parts.join(' | ');
+        }
+
+        function showLoading(show) {
+            elements.loadingState.style.display = show ? 'flex' : 'none';
+        }
+
+        // Navigation
+        function navigate(delta) {
+            const newIndex = currentIndex + delta;
+            if (newIndex >= 0 && newIndex < jobs.length) {
+                currentIndex = newIndex;
+                renderJob(jobs[currentIndex]);
+            }
+            updateNavButtons();
+        }
+
+        function updateNavButtons() {
+            elements.prevBtn.disabled = currentIndex <= 0;
+            elements.nextBtn.disabled = currentIndex >= jobs.length - 1;
+        }
+
+        // Event Handlers
+        async function handleDismiss() {
+            const job = jobs[currentIndex];
+            if (!job) return;
+
+            try {
+                await dismissJob(job.job_id);
+                jobs.splice(currentIndex, 1);
+                total--;
+
+                if (jobs.length === 0) {
+                    renderJob(null);
+                } else if (currentIndex >= jobs.length) {
+                    currentIndex = jobs.length - 1;
+                }
+                renderJob(jobs[currentIndex]);
+                updateNavButtons();
+
+                // Refresh stats
+                const stats = await fetchStats();
+                renderStats(stats);
+            } catch (err) {
+                alert('Failed to dismiss job: ' + err.message);
+            }
+        }
+
+        async function handleScore() {
+            const job = jobs[currentIndex];
+            if (!job) return;
+
+            elements.scoreBtn.disabled = true;
+            elements.scoreBtn.textContent = 'Scoring...';
+
+            try {
+                const result = await scoreJob(job.job_id);
+                job.score = result.score;
+                job.ai_analysis = result.analysis;
+                renderJob(job);
+            } catch (err) {
+                alert('Failed to score job: ' + err.message);
+            } finally {
+                elements.scoreBtn.disabled = false;
+                elements.scoreBtn.textContent = 'Re-score with AI';
+            }
+        }
+
+        async function handleApplyFilters() {
+            currentSort = elements.sortSelect.value;
+            const minScoreValue = elements.minScoreInput.value;
+            currentMinScore = minScoreValue ? parseFloat(minScoreValue) : null;
+            currentIndex = 0;
+            await loadJobs();
+        }
+
+        async function loadJobs() {
+            showLoading(true);
+            try {
+                const data = await fetchJobs();
+                jobs = data.jobs;
+                total = data.total;
+
+                // Check URL hash for starting position
+                const hash = window.location.hash;
+                if (hash.startsWith('#job-')) {
+                    const idx = parseInt(hash.slice(5), 10);
+                    if (!isNaN(idx) && idx >= 0 && idx < jobs.length) {
+                        currentIndex = idx;
+                    }
+                }
+
+                if (jobs.length > 0) {
+                    renderJob(jobs[currentIndex]);
+                } else {
+                    renderJob(null);
+                }
+                updateNavButtons();
+
+                const stats = await fetchStats();
+                renderStats(stats);
+            } catch (err) {
+                console.error('Failed to load jobs:', err);
+                elements.statsDisplay.textContent = 'Error loading jobs';
+            } finally {
+                showLoading(false);
+            }
+        }
+
+        // Initialize
+        function init() {
+            // Event listeners
+            elements.prevBtn.addEventListener('click', () => navigate(-1));
+            elements.nextBtn.addEventListener('click', () => navigate(1));
+            elements.dismissBtn.addEventListener('click', handleDismiss);
+            elements.scoreBtn.addEventListener('click', handleScore);
+            elements.applyFilters.addEventListener('click', handleApplyFilters);
+
+            // Keyboard navigation
+            document.addEventListener('keydown', (e) => {
+                if (e.target.tagName === 'INPUT' || e.target.tagName === 'SELECT') return;
+                if (e.key === 'ArrowLeft') navigate(-1);
+                if (e.key === 'ArrowRight') navigate(1);
+                if (e.key === 'd' || e.key === 'D') handleDismiss();
+            });
+
+            // Load initial data
+            loadJobs();
+        }
+
+        init();
+    </script>
+</body>
+</html>

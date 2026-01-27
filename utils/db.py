@@ -232,3 +232,138 @@ def get_high_scoring_jobs(
             (threshold, limit),
         ).fetchall()
         return [dict(row) for row in rows]
+
+
+def migrate_add_dismiss_columns(db_path: Path = DEFAULT_DB_PATH):
+    """Add dismissed_at and dismiss_reason columns if they don't exist."""
+    with get_connection(db_path) as conn:
+        # Check if columns exist
+        cursor = conn.execute('PRAGMA table_info(jobs)')
+        columns = {row[1] for row in cursor.fetchall()}
+
+        if 'dismissed_at' not in columns:
+            conn.execute('ALTER TABLE jobs ADD COLUMN dismissed_at TIMESTAMP')
+        if 'dismiss_reason' not in columns:
+            conn.execute('ALTER TABLE jobs ADD COLUMN dismiss_reason TEXT')
+
+
+def dismiss_job(
+    job_id: str, reason: str = None, db_path: Path = DEFAULT_DB_PATH
+) -> bool:
+    """
+    Soft-delete a job with optional reason for AI learning.
+
+    Returns True if job was dismissed, False if not found.
+    """
+    with get_connection(db_path) as conn:
+        cursor = conn.execute(
+            'UPDATE jobs SET dismissed_at = CURRENT_TIMESTAMP, dismiss_reason = ? WHERE job_id = ?',
+            (reason, job_id),
+        )
+        return cursor.rowcount > 0
+
+
+def restore_job(job_id: str, db_path: Path = DEFAULT_DB_PATH) -> bool:
+    """Restore a dismissed job. Returns True if restored, False if not found."""
+    with get_connection(db_path) as conn:
+        cursor = conn.execute(
+            'UPDATE jobs SET dismissed_at = NULL, dismiss_reason = NULL WHERE job_id = ?',
+            (job_id,),
+        )
+        return cursor.rowcount > 0
+
+
+def get_active_jobs(
+    limit: int = 50,
+    offset: int = 0,
+    sort: str = 'newest',
+    min_score: float = None,
+    db_path: Path = DEFAULT_DB_PATH,
+) -> list[dict]:
+    """
+    Get non-dismissed jobs with sorting/filtering.
+
+    Args:
+        limit: Max jobs to return
+        offset: Pagination offset
+        sort: 'newest', 'oldest', 'score_high', 'score_low'
+        min_score: Filter by minimum score (optional)
+
+    Returns:
+        List of job dicts
+    """
+    order_clauses = {
+        'newest': 'created_at DESC',
+        'oldest': 'created_at ASC',
+        'score_high': 'score DESC NULLS LAST, created_at DESC',
+        'score_low': 'score ASC NULLS LAST, created_at DESC',
+    }
+    order_by = order_clauses.get(sort, 'created_at DESC')
+
+    query = 'SELECT * FROM jobs WHERE dismissed_at IS NULL'
+    params: list = []
+
+    if min_score is not None:
+        query += ' AND score >= ?'
+        params.append(min_score)
+
+    query += f' ORDER BY {order_by} LIMIT ? OFFSET ?'
+    params.extend([limit, offset])
+
+    with get_connection(db_path) as conn:
+        rows = conn.execute(query, params).fetchall()
+        return [dict(row) for row in rows]
+
+
+def get_active_job_count(
+    min_score: float = None, db_path: Path = DEFAULT_DB_PATH
+) -> int:
+    """Get count of non-dismissed jobs."""
+    query = 'SELECT COUNT(*) FROM jobs WHERE dismissed_at IS NULL'
+    params: list = []
+
+    if min_score is not None:
+        query += ' AND score >= ?'
+        params.append(min_score)
+
+    with get_connection(db_path) as conn:
+        result = conn.execute(query, params).fetchone()
+        return result[0] if result else 0
+
+
+def get_scoring_stats(db_path: Path = DEFAULT_DB_PATH) -> dict:
+    """Get statistics about job scoring."""
+    with get_connection(db_path) as conn:
+        stats = {}
+
+        # Total and scored counts
+        stats['total_jobs'] = conn.execute('SELECT COUNT(*) FROM jobs').fetchone()[0]
+        stats['scored_jobs'] = conn.execute(
+            'SELECT COUNT(*) FROM jobs WHERE score IS NOT NULL'
+        ).fetchone()[0]
+        stats['dismissed_jobs'] = conn.execute(
+            'SELECT COUNT(*) FROM jobs WHERE dismissed_at IS NOT NULL'
+        ).fetchone()[0]
+        stats['active_jobs'] = conn.execute(
+            'SELECT COUNT(*) FROM jobs WHERE dismissed_at IS NULL'
+        ).fetchone()[0]
+
+        # Score distribution
+        score_result = conn.execute(
+            'SELECT AVG(score), MIN(score), MAX(score) FROM jobs WHERE score IS NOT NULL'
+        ).fetchone()
+        if score_result[0] is not None:
+            stats['avg_score'] = round(score_result[0], 2)
+            stats['min_score'] = round(score_result[1], 2)
+            stats['max_score'] = round(score_result[2], 2)
+        else:
+            stats['avg_score'] = None
+            stats['min_score'] = None
+            stats['max_score'] = None
+
+        # High scoring jobs (8+)
+        stats['high_scoring'] = conn.execute(
+            'SELECT COUNT(*) FROM jobs WHERE score >= 8 AND dismissed_at IS NULL'
+        ).fetchone()[0]
+
+        return stats
