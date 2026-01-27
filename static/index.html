@@ -44,10 +44,13 @@
             </div>
 
             <div class="key-stats">
+                <span id="postedAgo" class="stat-item stat-time"></span>
                 <span id="jobType" class="stat-item"></span>
                 <span id="jobBudget" class="stat-item"></span>
                 <span id="jobDuration" class="stat-item"></span>
                 <span id="jobLevel" class="stat-item"></span>
+                <span id="applicantsCount" class="stat-item"></span>
+                <span id="connectsRequired" class="stat-item"></span>
             </div>
 
             <div class="description-container">
@@ -60,32 +63,94 @@
             <details class="more-details">
                 <summary>More Details</summary>
                 <div class="details-content">
-                    <div class="detail-row">
-                        <strong>Client:</strong>
-                        <span id="clientCountry">--</span>,
-                        <span id="clientSpent">--</span> spent,
-                        <span id="clientRating">--</span> rating,
-                        <span id="clientHires">--</span> hires
+                    <div class="detail-section">
+                        <h4>Client Info</h4>
+                        <div class="detail-row">
+                            <strong>Location:</strong>
+                            <span id="clientCountry">--</span>
+                            <span id="buyerCity"></span>
+                        </div>
+                        <div class="detail-row">
+                            <strong>Total Spent:</strong>
+                            <span id="clientSpent">--</span>
+                        </div>
+                        <div class="detail-row">
+                            <strong>Hires:</strong>
+                            <span id="clientHires">--</span>
+                            (<span id="hireRate">--</span>% hire rate)
+                        </div>
+                        <div class="detail-row">
+                            <strong>Rating:</strong>
+                            <span id="clientRating">--</span>
+                            (<span id="clientReviews">--</span> reviews)
+                        </div>
+                        <div class="detail-row">
+                            <strong>Avg Hourly Rate:</strong>
+                            <span id="avgHourlyRate">--</span>
+                        </div>
+                        <div class="detail-row">
+                            <strong>Hours Billed:</strong>
+                            <span id="hoursBilled">--</span>
+                        </div>
+                        <div class="detail-row">
+                            <strong>Member Since:</strong>
+                            <span id="memberSince">--</span>
+                        </div>
+                        <div class="detail-row">
+                            <strong>Company Size:</strong>
+                            <span id="companySize">--</span>
+                        </div>
+                        <div class="detail-row">
+                            <strong>Industry:</strong>
+                            <span id="clientIndustry">--</span>
+                        </div>
+                        <div class="detail-row">
+                            <strong>Verified:</strong>
+                            Payment: <span id="paymentVerified">--</span>,
+                            Phone: <span id="phoneVerified">--</span>
+                        </div>
                     </div>
-                    <div class="detail-row">
-                        <strong>Location:</strong>
-                        <span id="locationRestriction">--</span>
+                    <div class="detail-section">
+                        <h4>Job Details</h4>
+                        <div class="detail-row">
+                            <strong>Location Requirement:</strong>
+                            <span id="locationRestriction">--</span>
+                        </div>
+                        <div class="detail-row">
+                            <strong>Category:</strong>
+                            <span id="jobCategory">--</span>
+                        </div>
+                        <div class="detail-row">
+                            <strong>Skills:</strong>
+                            <span id="jobSkills" class="skills-list">--</span>
+                        </div>
+                        <div class="detail-row">
+                            <strong>Contractor Tier:</strong>
+                            <span id="contractorTier">--</span>
+                        </div>
+                        <div class="detail-row">
+                            <strong>Positions:</strong>
+                            <span id="positionsToHire">--</span>
+                        </div>
+                        <div class="detail-row" id="questionsRow" style="display: none;">
+                            <strong>Screening Questions:</strong>
+                            <ul id="screeningQuestions"></ul>
+                        </div>
                     </div>
-                    <div class="detail-row">
-                        <strong>Category:</strong>
-                        <span id="jobCategory">--</span>
-                    </div>
-                    <div class="detail-row">
-                        <strong>Skills:</strong>
-                        <span id="jobSkills" class="skills-list">--</span>
-                    </div>
-                    <div class="detail-row">
-                        <strong>Payment Verified:</strong>
-                        <span id="paymentVerified">--</span>
-                    </div>
-                    <div class="detail-row">
-                        <strong>Posted:</strong>
-                        <span id="createdAt">--</span>
+                    <div class="detail-section">
+                        <h4>Activity</h4>
+                        <div class="detail-row">
+                            <strong>Invites Sent:</strong>
+                            <span id="invitesSent">--</span>
+                        </div>
+                        <div class="detail-row">
+                            <strong>Interviewing:</strong>
+                            <span id="interviewing">--</span>
+                        </div>
+                        <div class="detail-row">
+                            <strong>Hired:</strong>
+                            <span id="totalHired">--</span>
+                        </div>
                     </div>
                 </div>
             </details>
@@ -95,7 +160,7 @@
                 <h3>AI Analysis</h3>
                 <div class="score-grid">
                     <div class="score-item">
-                        <div class="score-label">Meeting Risk</div>
+                        <div class="score-label">Meeting avoidability</div>
                         <div id="meetingRisk" class="score-value">--</div>
                     </div>
                     <div class="score-item">
@@ -158,20 +223,43 @@
             jobCard: document.getElementById('jobCard'),
             jobTitle: document.getElementById('jobTitle'),
             jobLink: document.getElementById('jobLink'),
+            // Key stats
+            postedAgo: document.getElementById('postedAgo'),
             jobType: document.getElementById('jobType'),
             jobBudget: document.getElementById('jobBudget'),
             jobDuration: document.getElementById('jobDuration'),
             jobLevel: document.getElementById('jobLevel'),
+            applicantsCount: document.getElementById('applicantsCount'),
+            connectsRequired: document.getElementById('connectsRequired'),
             jobDescription: document.getElementById('jobDescription'),
+            // Client info
             clientCountry: document.getElementById('clientCountry'),
+            buyerCity: document.getElementById('buyerCity'),
             clientSpent: document.getElementById('clientSpent'),
-            clientRating: document.getElementById('clientRating'),
             clientHires: document.getElementById('clientHires'),
+            hireRate: document.getElementById('hireRate'),
+            clientRating: document.getElementById('clientRating'),
+            clientReviews: document.getElementById('clientReviews'),
+            avgHourlyRate: document.getElementById('avgHourlyRate'),
+            hoursBilled: document.getElementById('hoursBilled'),
+            memberSince: document.getElementById('memberSince'),
+            companySize: document.getElementById('companySize'),
+            clientIndustry: document.getElementById('clientIndustry'),
+            paymentVerified: document.getElementById('paymentVerified'),
+            phoneVerified: document.getElementById('phoneVerified'),
+            // Job details
             locationRestriction: document.getElementById('locationRestriction'),
             jobCategory: document.getElementById('jobCategory'),
             jobSkills: document.getElementById('jobSkills'),
-            paymentVerified: document.getElementById('paymentVerified'),
-            createdAt: document.getElementById('createdAt'),
+            contractorTier: document.getElementById('contractorTier'),
+            positionsToHire: document.getElementById('positionsToHire'),
+            questionsRow: document.getElementById('questionsRow'),
+            screeningQuestions: document.getElementById('screeningQuestions'),
+            // Activity
+            invitesSent: document.getElementById('invitesSent'),
+            interviewing: document.getElementById('interviewing'),
+            totalHired: document.getElementById('totalHired'),
+            // AI panel
             aiPanel: document.getElementById('aiPanel'),
             meetingRisk: document.getElementById('meetingRisk'),
             scopeClarity: document.getElementById('scopeClarity'),
@@ -234,15 +322,38 @@
             return 'score-low';
         }
 
+        function timeAgo(timestamp) {
+            if (!timestamp) return '--';
+            const seconds = Math.floor(Date.now() / 1000 - timestamp);
+            if (seconds < 60) return `${seconds}s ago`;
+            const minutes = Math.floor(seconds / 60);
+            if (minutes < 60) return `${minutes}m ago`;
+            const hours = Math.floor(minutes / 60);
+            if (hours < 24) return `${hours}h ago`;
+            const days = Math.floor(hours / 24);
+            if (days < 7) return `${days}d ago`;
+            const weeks = Math.floor(days / 7);
+            return `${weeks}w ago`;
+        }
+
         function formatBudget(job) {
             if (job.type === 'Hourly') {
                 const min = job.hourly_min || '?';
                 const max = job.hourly_max || '?';
                 return `$${min}-${max}/hr`;
-            } else if (job.fixed_budget_amount) {
+            } else if (job.fixed_budget_amount && job.fixed_budget_amount !== '0') {
                 return `$${job.fixed_budget_amount} fixed`;
             }
             return job.type || 'Unknown';
+        }
+
+        function formatMoney(value) {
+            if (!value || value === '0') return '--';
+            const num = parseFloat(value);
+            if (isNaN(num)) return value;
+            if (num >= 1000000) return `$${(num / 1000000).toFixed(1)}M`;
+            if (num >= 1000) return `$${(num / 1000).toFixed(0)}K`;
+            return `$${num}`;
         }
 
         function renderJob(job) {
@@ -259,34 +370,71 @@
             elements.jobTitle.textContent = job.title || 'Untitled';
             elements.jobLink.href = job.url || '#';
 
-            // Key stats
+            // Key stats (top row)
+            elements.postedAgo.textContent = timeAgo(job.posted_at);
             elements.jobType.textContent = job.type || '';
             elements.jobBudget.textContent = formatBudget(job);
             elements.jobDuration.textContent = job.duration || '';
             elements.jobLevel.textContent = job.level || '';
+            elements.applicantsCount.textContent = job.applicants ? `${job.applicants} applicants` : '';
+            elements.connectsRequired.textContent = job.connects_required ? `${job.connects_required} connects` : '';
 
             // Description
             elements.jobDescription.textContent = job.description || 'No description available.';
 
-            // Details
+            // Client info
             elements.clientCountry.textContent = job.client_country || '--';
-            elements.clientSpent.textContent = job.client_total_spent || '--';
-            elements.clientRating.textContent = job.client_rating ? `${job.client_rating}★` : '--';
+            elements.buyerCity.textContent = job.buyer_location_city ? `(${job.buyer_location_city})` : '';
+            elements.clientSpent.textContent = formatMoney(job.client_total_spent);
             elements.clientHires.textContent = job.client_hires || '--';
-            elements.locationRestriction.textContent = job.location_restriction || 'None';
-            elements.jobCategory.textContent = job.category || '--';
+            elements.hireRate.textContent = job.buyer_hire_rate_pct ?? '--';
+            elements.clientRating.textContent = job.client_rating ? `${job.client_rating}★` : '--';
+            elements.clientReviews.textContent = job.client_reviews || '0';
+            elements.avgHourlyRate.textContent = job.buyer_avgHourlyJobsRate_amount ? `$${job.buyer_avgHourlyJobsRate_amount}/hr` : '--';
+            elements.hoursBilled.textContent = job.buyer_stats_hoursCount || '--';
+            elements.memberSince.textContent = job.buyer_company_contractDate || '--';
+            elements.companySize.textContent = job.client_company_size || '--';
+            elements.clientIndustry.textContent = job.client_industry || '--';
             elements.paymentVerified.textContent = job.payment_verified ? 'Yes' : 'No';
-            elements.createdAt.textContent = job.created_at ? new Date(job.created_at).toLocaleString() : '--';
+            elements.phoneVerified.textContent = job.phone_verified ? 'Yes' : 'No';
+
+            // Job details
+            elements.locationRestriction.textContent = job.location_restriction || 'Worldwide';
+            elements.jobCategory.textContent = job.category || job.category_name || '--';
+            elements.contractorTier.textContent = job.contractorTier || '--';
+            elements.positionsToHire.textContent = job.numberOfPositionsToHire || '1';
 
             // Skills
             const skills = job.skills;
             if (Array.isArray(skills) && skills.length > 0) {
                 elements.jobSkills.textContent = skills.join(', ');
             } else if (typeof skills === 'string' && skills) {
-                elements.jobSkills.textContent = skills;
+                try {
+                    const parsed = JSON.parse(skills);
+                    elements.jobSkills.textContent = Array.isArray(parsed) ? parsed.join(', ') : skills;
+                } catch {
+                    elements.jobSkills.textContent = skills;
+                }
             } else {
                 elements.jobSkills.textContent = '--';
             }
+
+            // Screening questions
+            let questions = job.questions;
+            if (typeof questions === 'string') {
+                try { questions = JSON.parse(questions); } catch { questions = null; }
+            }
+            if (Array.isArray(questions) && questions.length > 0) {
+                elements.questionsRow.style.display = 'block';
+                elements.screeningQuestions.innerHTML = questions.map(q => `<li>${q}</li>`).join('');
+            } else {
+                elements.questionsRow.style.display = 'none';
+            }
+
+            // Activity
+            elements.invitesSent.textContent = job.clientActivity_invitationsSent ?? '--';
+            elements.interviewing.textContent = job.clientActivity_totalInvitedToInterview ?? '--';
+            elements.totalHired.textContent = job.clientActivity_totalHired ?? '--';
 
             // Score badge
             const score = job.score;

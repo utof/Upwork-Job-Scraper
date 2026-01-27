@@ -24,7 +24,7 @@ from utils.db import (
     get_job,
     get_scoring_stats,
     init_db,
-    migrate_add_dismiss_columns,
+    migrate_db,
     restore_job,
     update_job_analysis,
     update_job_score,
@@ -165,7 +165,7 @@ if STATIC_DIR.exists():
 def startup_event():
     """Initialize database on startup."""
     init_db()
-    migrate_add_dismiss_columns()
+    migrate_db()
     print(f'Database initialized at {DEFAULT_DB_PATH}')
 
 
